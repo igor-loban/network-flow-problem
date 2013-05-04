@@ -11,8 +11,11 @@ public class Net {
     private Tree tree;
     private Flow flow;
     private double eps;
+    private double subOptVal = 0;
+    private double step = 0;
     private int nodeCount;
     private int arcCount;
+
 
     public Net(List<Node> nodes, List<Arc> arcs, double eps, int nodeCount, int arcCount) {
         this.nodes = nodes;
@@ -23,18 +26,42 @@ public class Net {
     }
 
     public void prepare() {
+        // Построить дерево
+        // Построить начальный поток
+
+        // Построить динамич опору Qr(op)
+        // Посчитать псевдо-c(ij)
+        // Посчитать потенциалы psi и ksi
     }
 
-    public void nextIteration() {
-
+    public void recalcPlan() {
+        // Посчитать оценки delta
+        // Посчитать v и l
+        // Посчитать шаг theta
+        // Пересчет плана
     }
 
-    public double calcSuboptimality() {
-        return 0;
+    public void changeSupport() {
+        // Замена опоры
+        // Пересчет потенциалов
     }
 
-    public double getEps() {
-        return eps;
+    public boolean isViolated() {
+        return false;
+    }
+
+    public boolean isOptimized() {
+        // Пересчет оценки субоптимальности beta
+        if ((1 - step)*subOptVal <= eps)
+            return true;
+        else
+        return false;
+    }
+
+
+    public double calcEstimates(int index) {
+        return arcs.get(index).getBeginNode().getPotential() -
+                arcs.get(index).getEndNode().getPotential() - arcs.get(index).getCost();
     }
 
     private class Tree {

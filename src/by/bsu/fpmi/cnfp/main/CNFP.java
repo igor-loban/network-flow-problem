@@ -11,8 +11,12 @@ public class CNFP {
     public static void solve(InputData inputData, OutputData outputData) {
         Net net = inputData.parse();
         net.prepare();
-        while (net.calcSuboptimality() > net.getEps()) {
-            net.nextIteration();
+        if (net.isViolated()) {
+            net.recalcPlan();
+            while (!net.isOptimized()) {
+                net.changeSupport();
+                net.recalcPlan();
+            }
         }
         outputData.write(net);
     }
