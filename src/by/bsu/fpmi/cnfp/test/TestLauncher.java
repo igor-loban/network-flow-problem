@@ -2,7 +2,7 @@ package by.bsu.fpmi.cnfp.test;
 
 import by.bsu.fpmi.cnfp.io.InputData;
 import by.bsu.fpmi.cnfp.io.PlainTextInputData;
-import by.bsu.fpmi.cnfp.main.CNFP;
+import by.bsu.fpmi.cnfp.main.NetworkFlowProblem;
 import by.bsu.fpmi.cnfp.io.OutputData;
 import by.bsu.fpmi.cnfp.io.PlainTextOutputData;
 
@@ -17,7 +17,7 @@ public class TestLauncher {
 
         InputData inputData = new PlainTextInputData("input.txt");
         OutputData outputData = new PlainTextOutputData("output.txt");
-        CNFP.solve(inputData, outputData);
+        NetworkFlowProblem.solve(inputData, outputData);
 
         System.out.println("Test has finished.");
     }

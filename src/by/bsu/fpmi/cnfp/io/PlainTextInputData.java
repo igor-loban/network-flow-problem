@@ -42,29 +42,33 @@ public class PlainTextInputData implements InputData {
         Map<Integer, Arc> arcs = new HashMap<>();
 
         // Header
-        builder.setEps(scanner.nextDouble());
-        scanner.next();
-        scanner.next();
         nodeCount = scanner.nextInt();
         arcCount = scanner.nextInt();
-        builder.setNodeCount(nodeCount).setArcCount(arcCount);
+        builder.setNodeCount(nodeCount).setArcCount(arcCount).setEps(scanner.nextDouble());
 
         // Body
         int time = 0;
         while (scanner.hasNext()) {
             // Prepare to parse net #time
             int nodeBase = time * nodeCount;
-            int arcBase = time * arcCount;
-            for (int i = 1; i <= nodeCount; i++) {
-                int number = nodeBase + i;
-                Node node = new Node(number);
-                nodes.put(number, node);
+            int arcBase = time > 0 ? (time - 1) * (arcCount + nodeCount) + arcCount : 0;
+            int nodeNumber = nodeBase;
+            int arcNumber = arcBase + 1;
+            while (nodeNumber < nodeBase + nodeCount) {
+                Node node = new Node(++nodeNumber);
+                nodes.put(nodeNumber, node);
                 builder.addNode(node);
             }
-            for (int i = 1; i <= arcCount; i++) {
-                int number = arcBase + i;
-                Arc arc = new Arc(number);
-                arcs.put(number, arc);
+            if (time > 0) {
+                while (arcNumber <= arcBase + nodeCount) {
+                    Arc arc = new Arc(arcNumber);
+                    arcs.put(arcNumber++, arc);
+                    builder.addArc(arc);
+                }
+            }
+            for (int i = 0; i < arcCount; i++) {
+                Arc arc = new Arc(arcNumber);
+                arcs.put(arcNumber++, arc);
                 builder.addArc(arc);
             }
 
@@ -72,31 +76,41 @@ public class PlainTextInputData implements InputData {
             String mark = scanner.next();
 
             // Parse Node
+            nodeNumber = nodeBase;
             while ("n".equals(mark)) {
-                int number = nodeBase + scanner.nextInt();
-                Node node = nodes.get(number);
+                Node node = nodes.get(++nodeNumber);
                 node.setProductivity(scanner.nextInt());
+                node.setCapacity(scanner.nextInt());
+                node.setCost(scanner.nextInt());
                 mark = scanner.next();
             }
 
+            // Build intermediate arcs
+            arcNumber = arcBase + 1;
+            if (time > 0) {
+                for (int i = 1; i <= nodeCount; i++) {
+                    Arc arc = arcs.get(arcNumber++);
+                    Node beginNode = nodes.get(nodeBase - nodeCount + i);
+                    arc.setBeginNode(beginNode);
+                    arc.setEndNode(nodes.get(nodeBase + i));
+                    arc.setCapacity(beginNode.getCapacity());
+                    arc.setCost(beginNode.getCost());
+                }
+            }
+
             // Parse Arc
-            int arcNumber = arcBase + 1;
             while ("a".equals(mark)) {
-                Arc arc = arcs.get(arcNumber);
+                Arc arc = arcs.get(arcNumber++);
                 arc.setBeginNode(nodes.get(nodeBase + scanner.nextInt()));
                 arc.setEndNode(nodes.get(nodeBase + scanner.nextInt()));
-                scanner.next();
                 arc.setCapacity(scanner.nextDouble());
                 arc.setCost(scanner.nextDouble());
-                arcNumber++;
                 if (scanner.hasNext()) {
                     mark = scanner.next();
                 } else {
                     break;
                 }
             }
-
-            //
 
             // Prepare to parse next net
             time++;

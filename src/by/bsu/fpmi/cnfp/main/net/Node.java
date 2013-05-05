@@ -13,7 +13,9 @@ public class Node {
     private List<Node> descendants;
     private Node ancestor;
     private int depth;
-    private int productivity; // TODO: исток/сток
+    private int productivity;
+    private int capacity;
+    private int cost;
 
     public Node() {
     }
@@ -84,5 +86,21 @@ public class Node {
 
     public void setProductivity(int productivity) {
         this.productivity = productivity;
+    }
+
+    public int getCapacity() {
+        return capacity;
+    }
+
+    public void setCapacity(int capacity) {
+        this.capacity = capacity;
+    }
+
+    public int getCost() {
+        return cost;
+    }
+
+    public void setCost(int cost) {
+        this.cost = cost;
     }
 }
