@@ -7,7 +7,10 @@ import by.bsu.fpmi.cnfp.main.net.Net;
 /**
  * @author Igor Loban
  */
-public class CNFP {
+public final class NetworkFlowProblem {
+    private NetworkFlowProblem() {
+    }
+
     public static void solve(InputData inputData, OutputData outputData) {
         Net net = inputData.parse();
         net.prepare();
