@@ -4,9 +4,9 @@ import by.bsu.fpmi.cnfp.io.InputData;
 import by.bsu.fpmi.cnfp.io.OutputData;
 import by.bsu.fpmi.cnfp.main.net.AbstractNet;
 import by.bsu.fpmi.cnfp.main.net.FirstPhaseNet;
-import by.bsu.fpmi.cnfp.main.net.Flow;
+import by.bsu.fpmi.cnfp.main.model.Flow;
 import by.bsu.fpmi.cnfp.main.net.Net;
-import by.bsu.fpmi.cnfp.main.net.Tree;
+import by.bsu.fpmi.cnfp.main.model.Tree;
 
 /**
  * @author Igor Loban

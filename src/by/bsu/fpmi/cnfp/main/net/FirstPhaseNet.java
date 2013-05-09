@@ -1,12 +1,15 @@
 package by.bsu.fpmi.cnfp.main.net;
 
-import java.util.List;
+import by.bsu.fpmi.cnfp.main.model.Arc;
+import by.bsu.fpmi.cnfp.main.model.Node;
+
+import java.util.Map;
 
 /**
  * @author Igor Loban
  */
 public class FirstPhaseNet extends AbstractNet {
-    public FirstPhaseNet(List<Node> nodes, List<Arc> arcs, int nodeCount, int arcCount) {
+    public FirstPhaseNet(Map<Integer, Node> nodes, Map<Integer, Arc> arcs, int nodeCount, int arcCount) {
         super(nodes, arcs, nodeCount, arcCount);
     }
 

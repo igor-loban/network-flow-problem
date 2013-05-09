@@ -1,12 +1,11 @@
-package by.bsu.fpmi.cnfp.main.net;
+package by.bsu.fpmi.cnfp.main.model;
 
 import java.util.List;
 
 /**
  * @author Igor Loban
  */
-public class Node {
-    private int number;
+public class Node extends NumerableObject {
     private double potential;
     private Arc exitArc; // TODO: add links with arcs
     private Arc incomingArc;
@@ -21,15 +20,7 @@ public class Node {
     }
 
     public Node(int number) {
-        this.number = number;
-    }
-
-    public int getNumber() {
-        return number;
-    }
-
-    public void setNumber(int number) {
-        this.number = number;
+        super(number);
     }
 
     public double getPotential() {

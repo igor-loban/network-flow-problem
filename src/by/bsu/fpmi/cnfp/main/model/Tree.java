@@ -1,4 +1,4 @@
-package by.bsu.fpmi.cnfp.main.net;
+package by.bsu.fpmi.cnfp.main.model;
 
 /**
  * @author Igor Loban

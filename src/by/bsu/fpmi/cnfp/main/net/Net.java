@@ -1,6 +1,16 @@
 package by.bsu.fpmi.cnfp.main.net;
 
-import java.util.List;
+import by.bsu.fpmi.cnfp.main.model.Arc;
+import by.bsu.fpmi.cnfp.main.model.Flow;
+import by.bsu.fpmi.cnfp.main.model.Node;
+import by.bsu.fpmi.cnfp.main.model.NumerableObject;
+import by.bsu.fpmi.cnfp.main.model.Tree;
+import by.bsu.fpmi.cnfp.main.model.factory.ArcFactory;
+import by.bsu.fpmi.cnfp.main.model.factory.NodeFactory;
+import by.bsu.fpmi.cnfp.main.model.factory.NumerableObjectFactory;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author Igor Loban
@@ -10,18 +20,43 @@ public class Net extends AbstractNet {
     private double subOptVal = 0; // TODO: think about theses values
     private double step = 0;
 
-    public Net(List<Node> nodes, List<Arc> arcs, double eps, int nodeCount, int arcCount) {
+    public Net(Map<Integer, Node> nodes, Map<Integer, Arc> arcs, double eps, int nodeCount, int arcCount) {
         super(nodes, arcs, nodeCount, arcCount);
         this.eps = eps;
     }
 
+    /**
+     * Ввести искусственные вершины, из которых выходят источники и нейтральные узлы и входят стоки (на каждом уровне)
+     * Искусственные вершины соединяются дугами из уровня в уровень. Присвоить искусственным дугам стоимость M, где M -
+     * большое число (штраф)
+     *
+     * @return net for first phase
+     */
     public FirstPhaseNet createFirstPhaseNet() {
-        // TODO: create net for first phase
-        //      Ввести искусственные вершины, из которых выходят источники и нейтральные узлы и входят стоки (на каждом
-        //      уровне)
-        //      Искусственные вершины соединяются дугами из уровня в уровень
-        //      Присвоить искусственным дугам стоимость M, где M - большое число (штраф)
-        return null;
+        Map<Integer, Node> newNodes = createStubs(nodes, NodeFactory.getInstance());
+        Map<Integer, Arc> newArcs = createStubs(arcs, ArcFactory.getInstance());
+        fillStubs(newNodes, nodes, arcs, NodeFactory.getInstance());
+        fillStubs(newArcs, arcs, nodes, ArcFactory.getInstance());
+
+        // TODO: add artificial nodes
+
+        return new FirstPhaseNet(newNodes, newArcs, nodeCount, arcCount);
+    }
+
+    private <T extends NumerableObject, S extends NumerableObject> Map<Integer, T> createStubs(Map<Integer, T> sourcePool, NumerableObjectFactory<T, S> factory) {
+        Map<Integer, T> stubs = new HashMap<>();
+        for (T source : sourcePool.values()) {
+            T stub = factory.createStub(source);
+            stubs.put(stub.getNumber(), stub);
+        }
+        return stubs;
+    }
+
+    private <T extends NumerableObject, S extends NumerableObject> void fillStubs(Map<Integer, T> stubs, Map<Integer, T> sourcePool, Map<Integer, S> addingPool, NumerableObjectFactory<T, S> factory) {
+        for (T stub : stubs.values()) {
+            T source = sourcePool.get(stub.getNumber());
+            factory.fillStub(stub, source, sourcePool, addingPool);
+        }
     }
 
     public void setInitialFlow(Tree tree, Flow flow) {

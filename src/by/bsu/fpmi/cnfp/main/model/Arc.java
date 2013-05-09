@@ -1,10 +1,9 @@
-package by.bsu.fpmi.cnfp.main.net;
+package by.bsu.fpmi.cnfp.main.model;
 
 /**
  * @author Igor Loban
  */
-public class Arc {
-    private int number;
+public class Arc extends NumerableObject {
     private Node beginNode;
     private Node endNode;
     private double capacity;
@@ -16,15 +15,7 @@ public class Arc {
     }
 
     public Arc(int number) {
-        this.number = number;
-    }
-
-    public int getNumber() {
-        return number;
-    }
-
-    public void setNumber(int number) {
-        this.number = number;
+        super(number);
     }
 
     public Node getBeginNode() {

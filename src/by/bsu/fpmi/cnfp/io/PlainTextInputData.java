@@ -1,9 +1,9 @@
 package by.bsu.fpmi.cnfp.io;
 
-import by.bsu.fpmi.cnfp.main.net.Arc;
+import by.bsu.fpmi.cnfp.main.model.Arc;
 import by.bsu.fpmi.cnfp.main.net.Net;
 import by.bsu.fpmi.cnfp.main.net.NetBuilder;
-import by.bsu.fpmi.cnfp.main.net.Node;
+import by.bsu.fpmi.cnfp.main.model.Node;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -70,6 +70,8 @@ public class PlainTextInputData implements InputData {
                 scanner.next();
                 parseArc(arcs.get(++arcNumber), nodes, nodeBase, scanner);
             }
+
+            // TODO: add incoming/exit arcs if needed
 
             time++;
             if (scanner.hasNext()) {
