@@ -10,12 +10,15 @@ public class FirstPhaseNet extends AbstractNet {
         super(nodes, arcs, nodeCount, arcCount);
     }
 
+    @Override
+    public boolean hasSolution() {
+        // TODO: check containing of artificial arcs in tree
+        return false;
+    }
+
+    // TODO: think about overriding below methods
     public void prepare() {
         // Построить дерево и начальный поток
-        //      Ввести искусственные вершины, из которых выходят источники и нейтральные узлы и входят стоки (на каждом
-        //      уровне)
-        //      Искусственные вершины соединяются дугами из уровня в уровень
-        //      Присвоить искусственным дугам стоимость M, где M - большое число (штраф)
         //      Дерево будет состоять из искуственных дуг
         //      Поток равен абсолютным значениям интенсивностей узлов
         //      Решать обычным методом.
@@ -27,6 +30,10 @@ public class FirstPhaseNet extends AbstractNet {
         // Посчитать потенциалы psi и ksi
     }
 
+    public boolean isViolated() {
+        return false;
+    }
+
     public void recalcPlan() {
         // Посчитать оценки delta
         // Посчитать v и l
@@ -34,20 +41,17 @@ public class FirstPhaseNet extends AbstractNet {
         // Пересчет плана
     }
 
-    public void changeSupport() {
-        // Замена опоры
-        // Пересчет потенциалов
-    }
-
-    public boolean isViolated() {
-        return false;
-    }
-
     public boolean isOptimized() {
         // Пересчет оценки субоптимальности beta
         return false;
     }
 
+    public void changeSupport() {
+        // Замена опоры
+        // Пересчет потенциалов
+    }
+
+    // TODO: think about this method
     public double calcEstimates(int index) {
         return arcs.get(index).getBeginNode().getPotential() -
                 arcs.get(index).getEndNode().getPotential() - arcs.get(index).getCost();

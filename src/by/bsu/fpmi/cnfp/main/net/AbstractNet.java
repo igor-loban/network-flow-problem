@@ -20,11 +20,23 @@ public abstract class AbstractNet {
         this.arcCount = arcCount;
     }
 
-    protected class Tree {
+    public abstract boolean hasSolution();
 
+    public abstract void prepare();
+
+    public abstract boolean isViolated();
+
+    public abstract void recalcPlan();
+
+    public abstract boolean isOptimized();
+
+    public abstract void changeSupport();
+
+    public Tree getTree() {
+        return tree;
     }
 
-    protected class Flow {
-
+    public Flow getFlow() {
+        return flow;
     }
 }

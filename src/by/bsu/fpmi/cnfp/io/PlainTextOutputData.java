@@ -1,9 +1,12 @@
 package by.bsu.fpmi.cnfp.io;
 
-import by.bsu.fpmi.cnfp.io.OutputData;
 import by.bsu.fpmi.cnfp.main.net.Net;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.OutputStream;
+import java.io.PrintWriter;
 
 /**
  * @author Igor Loban
@@ -26,6 +29,14 @@ public class PlainTextOutputData implements OutputData {
     @Override
     public void write(Net net) {
         PrintWriter writer = new PrintWriter(outputStream);
+
+        if (net.hasSolution()) {
+            // TODO: print the solution
+            writer.println("Solution: ...");
+        } else {
+            writer.println("Problem has no solution. Constraints are antithetical.");
+        }
+
         writer.close();
     }
 }
