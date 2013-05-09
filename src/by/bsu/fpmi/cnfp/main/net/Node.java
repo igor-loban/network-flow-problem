@@ -8,7 +8,7 @@ import java.util.List;
 public class Node {
     private int number;
     private double potential;
-    private Arc exitArc;
+    private Arc exitArc; // TODO: add links with arcs
     private Arc incomingArc;
     private List<Node> descendants;
     private Node ancestor;

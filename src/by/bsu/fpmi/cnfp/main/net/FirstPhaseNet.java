@@ -5,19 +5,9 @@ import java.util.List;
 /**
  * @author Igor Loban
  */
-public class Net extends AbstractNet {
-    protected double eps;
-    private double subOptVal = 0; // TODO: think about theses values
-    private double step = 0;
-
-    public Net(List<Node> nodes, List<Arc> arcs, double eps, int nodeCount, int arcCount) {
+public class FirstPhaseNet extends AbstractNet {
+    public FirstPhaseNet(List<Node> nodes, List<Arc> arcs, int nodeCount, int arcCount) {
         super(nodes, arcs, nodeCount, arcCount);
-        this.eps = eps;
-    }
-
-    public FirstPhaseNet createFirstPhaseNet() {
-        // TODO: create net for first phase
-        return null;
     }
 
     public void prepare() {
@@ -55,7 +45,7 @@ public class Net extends AbstractNet {
 
     public boolean isOptimized() {
         // Пересчет оценки субоптимальности beta
-        return (1 - step) * subOptVal <= eps;
+        return false;
     }
 
     public double calcEstimates(int index) {
