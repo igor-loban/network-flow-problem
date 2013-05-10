@@ -1,6 +1,6 @@
 package by.bsu.fpmi.cnfp.main;
 
-import by.bsu.fpmi.cnfp.exception.AntitheticalConstraints;
+import by.bsu.fpmi.cnfp.exception.AntitheticalConstraintsException;
 import by.bsu.fpmi.cnfp.main.model.Arc;
 import by.bsu.fpmi.cnfp.main.model.Node;
 import by.bsu.fpmi.cnfp.main.model.NumerableObject;
@@ -51,7 +51,8 @@ public final class AlgoUtils {
 
             if (nodeNumber < -1) {
                 if (totalIntensity < 0) {
-                    throw new AntitheticalConstraints("Total intensity of periods from 1 to " + period + " equals " + totalIntensity + ".");
+                    throw new AntitheticalConstraintsException(
+                            "Total intensity of periods from 1 to " + period + " equals " + totalIntensity + ".");
                 }
                 Node previousArtificialNode = nodes.get(nodeNumber + 1);
                 createArtificialArc(arcNumber--, arcs, totalIntensity, previousArtificialNode, artificialNode);

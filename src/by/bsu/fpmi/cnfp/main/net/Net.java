@@ -30,7 +30,7 @@ public class Net extends AbstractNet {
         AlgoUtils.fillStubs(newNodes, nodes, arcs, NodeFactory.getInstance());
         AlgoUtils.fillStubs(newArcs, arcs, nodes, ArcFactory.getInstance());
         AlgoUtils.addArtificialNodes(newNodes, newArcs, periodCount);
-        return new FirstPhaseNet(newNodes, newArcs, nodeCount, arcCount);
+        return new FirstPhaseNet(newNodes, newArcs, nodeCount, arcCount, periodCount);
     }
 
     public void setInitialFlow(Tree tree, Flow flow) {

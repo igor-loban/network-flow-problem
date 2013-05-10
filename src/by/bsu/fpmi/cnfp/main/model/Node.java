@@ -1,5 +1,6 @@
 package by.bsu.fpmi.cnfp.main.model;
 
+import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -11,9 +12,9 @@ public class Node extends NumerableObject {
     private int capacity;
     private int cost;
     private double potential;
-    private Set<Arc> incomingArcs;
-    private Set<Arc> exitArcs;
-    private Set<Node> descendants;
+    private Set<Arc> incomingArcs = new HashSet<>();
+    private Set<Arc> exitArcs = new HashSet<>();
+    private Set<Node> descendants = new HashSet<>();
     private Node ancestor;
 
     public Node() {
@@ -75,16 +76,8 @@ public class Node extends NumerableObject {
         return incomingArcs;
     }
 
-    public void setIncomingArcs(Set<Arc> incomingArcs) {
-        this.incomingArcs = incomingArcs;
-    }
-
     public Set<Arc> getExitArcs() {
         return exitArcs;
-    }
-
-    public void setExitArcs(Set<Arc> exitArcs) {
-        this.exitArcs = exitArcs;
     }
 
     public Set<Node> getDescendants() {

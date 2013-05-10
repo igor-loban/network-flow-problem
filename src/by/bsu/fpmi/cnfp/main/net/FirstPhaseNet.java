@@ -9,8 +9,9 @@ import java.util.Map;
  * @author Igor Loban
  */
 public class FirstPhaseNet extends AbstractNet {
-    public FirstPhaseNet(Map<Integer, Node> nodes, Map<Integer, Arc> arcs, int nodeCount, int arcCount) {
-        super(nodes, arcs, nodeCount, arcCount);
+    public FirstPhaseNet(Map<Integer, Node> nodes, Map<Integer, Arc> arcs, int nodeCount, int arcCount,
+                         int periodCount) {
+        super(nodes, arcs, nodeCount, arcCount, periodCount);
     }
 
     @Override

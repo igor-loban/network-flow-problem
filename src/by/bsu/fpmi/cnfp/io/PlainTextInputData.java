@@ -60,8 +60,8 @@ public class PlainTextInputData implements InputData {
                 int arcNumber = arcBase;
                 int nodeNumber = nodeBase;
                 for (int i = 0; i < nodeCount; i++) {
-                    initIntermediateArc(arcs.get(++arcNumber), nodes.get(++nodeNumber),
-                            nodes.get(nodeNumber - nodeCount - 1));
+                    addIntermediateArc(arcs.get(++arcNumber), nodes.get(++nodeNumber - nodeCount),
+                            nodes.get(nodeNumber));
                 }
             }
 
@@ -70,8 +70,6 @@ public class PlainTextInputData implements InputData {
                 scanner.next();
                 parseArc(arcs.get(++arcNumber), nodes, nodeBase, scanner);
             }
-
-            // TODO: add incoming/exit arcs if needed
 
             periodCount++;
             if (scanner.hasNext()) {
@@ -108,14 +106,20 @@ public class PlainTextInputData implements InputData {
     }
 
     private void parseArc(Arc arc, Map<Integer, Node> nodes, int nodeBase, Scanner scanner) {
-        arc.setBeginNode(nodes.get(nodeBase + scanner.nextInt()));
-        arc.setEndNode(nodes.get(nodeBase + scanner.nextInt()));
+        Node beginNode = nodes.get(nodeBase + scanner.nextInt());
+        beginNode.addExitArc(arc);
+        arc.setBeginNode(beginNode);
+        Node endNode = nodes.get(nodeBase + scanner.nextInt());
+        endNode.addIncomingArc(arc);
+        arc.setEndNode(endNode);
         arc.setCapacity(scanner.nextDouble());
         arc.setCost(scanner.nextDouble());
     }
 
-    private void initIntermediateArc(Arc arc, Node beginNode, Node endNode) {
+    private void addIntermediateArc(Arc arc, Node beginNode, Node endNode) {
+        beginNode.addExitArc(arc);
         arc.setBeginNode(beginNode);
+        endNode.addIncomingArc(arc);
         arc.setEndNode(endNode);
         arc.setCapacity(beginNode.getCapacity());
         arc.setCost(beginNode.getCost());
