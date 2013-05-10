@@ -28,6 +28,7 @@ public final class ArcFactory implements NumerableObjectFactory<Arc, Node> {
     }
 
     public void fillStub(Arc stub, Arc source, Map<Integer, Arc> arcs, Map<Integer, Node> nodes) {
-        // TODO: complete coping of arc
+        stub.setBeginNode(nodes.get(source.getBeginNode().getNumber()));
+        stub.setEndNode(nodes.get(source.getEndNode().getNumber()));
     }
 }

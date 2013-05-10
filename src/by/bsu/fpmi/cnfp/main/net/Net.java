@@ -27,9 +27,9 @@ public class Net extends AbstractNet {
     public FirstPhaseNet createFirstPhaseNet() {
         Map<Integer, Node> newNodes = AlgoUtils.createStubs(nodes, NodeFactory.getInstance());
         Map<Integer, Arc> newArcs = AlgoUtils.createStubs(arcs, ArcFactory.getInstance());
-        AlgoUtils.fillStubs(newNodes, nodes, arcs, NodeFactory.getInstance());
-        AlgoUtils.fillStubs(newArcs, arcs, nodes, ArcFactory.getInstance());
-        AlgoUtils.addArtificialNodes(newNodes, newArcs, periodCount);
+        AlgoUtils.fillStubs(newNodes, nodes, newArcs, NodeFactory.getInstance());
+        AlgoUtils.fillStubs(newArcs, arcs, newNodes, ArcFactory.getInstance());
+        AlgoUtils.addArtificialNodes(newNodes, newArcs, nodeCount, periodCount);
         return new FirstPhaseNet(newNodes, newArcs, nodeCount, arcCount, periodCount);
     }
 

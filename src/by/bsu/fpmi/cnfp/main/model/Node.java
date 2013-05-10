@@ -12,16 +12,20 @@ public class Node extends NumerableObject {
     private int capacity;
     private int cost;
     private double potential;
+    private Node ancestor;
+    private Set<Node> descendants = new HashSet<>();
     private Set<Arc> incomingArcs = new HashSet<>();
     private Set<Arc> exitArcs = new HashSet<>();
-    private Set<Node> descendants = new HashSet<>();
-    private Node ancestor;
 
     public Node() {
     }
 
     public Node(int number) {
         super(number);
+    }
+
+    public void addDescendant(Node node) {
+        descendants.add(node);
     }
 
     public void addIncomingArc(Arc arc) {
