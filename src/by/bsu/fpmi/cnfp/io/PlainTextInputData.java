@@ -44,19 +44,19 @@ public class PlainTextInputData implements InputData {
         builder.setNodeCount(nodeCount).setArcCount(arcCount).setEps(scanner.nextDouble());
 
         // Body
-        int time = 0;
+        int periodCount = 0;
         while (scanner.hasNext()) {
-            int nodeBase = time * nodeCount;
-            int arcBase = time > 0 ? (time - 1) * (arcCount + nodeCount) + arcCount : 0;
+            int nodeBase = periodCount * nodeCount;
+            int arcBase = periodCount > 0 ? (periodCount - 1) * (arcCount + nodeCount) + arcCount : 0;
             createNodes(nodes, builder, nodeBase, nodeCount);
-            createArcs(arcs, builder, arcBase, time > 0 ? arcCount + nodeCount : arcCount);
+            createArcs(arcs, builder, arcBase, periodCount > 0 ? arcCount + nodeCount : arcCount);
 
             for (int nodeNumber = nodeBase + 1; nodeNumber <= nodeBase + nodeCount; nodeNumber++) {
                 scanner.next();
                 parseNode(nodes.get(nodeNumber), scanner);
             }
 
-            if (time > 0) {
+            if (periodCount > 0) {
                 int arcNumber = arcBase;
                 int nodeNumber = nodeBase;
                 for (int i = 0; i < nodeCount; i++) {
@@ -65,7 +65,7 @@ public class PlainTextInputData implements InputData {
                 }
             }
 
-            int arcNumber = time > 0 ? arcBase + nodeCount : arcBase;
+            int arcNumber = periodCount > 0 ? arcBase + nodeCount : arcBase;
             for (int i = 0; i < arcCount; i++) {
                 scanner.next();
                 parseArc(arcs.get(++arcNumber), nodes, nodeBase, scanner);
@@ -73,14 +73,14 @@ public class PlainTextInputData implements InputData {
 
             // TODO: add incoming/exit arcs if needed
 
-            time++;
+            periodCount++;
             if (scanner.hasNext()) {
                 scanner.next();
             }
         }
 
         scanner.close();
-        return builder.build();
+        return builder.setPeriodCount(periodCount).build();
     }
 
     private void createNodes(Map<Integer, Node> nodes, NetBuilder builder, int nodeBase, int nodeCount) {
@@ -102,7 +102,7 @@ public class PlainTextInputData implements InputData {
     }
 
     private void parseNode(Node node, Scanner scanner) {
-        node.setProductivity(scanner.nextInt());
+        node.setIntensity(scanner.nextInt());
         node.setCapacity(scanner.nextInt());
         node.setCost(scanner.nextInt());
     }

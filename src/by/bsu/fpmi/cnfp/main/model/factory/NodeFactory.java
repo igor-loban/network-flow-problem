@@ -22,7 +22,7 @@ public final class NodeFactory implements NumerableObjectFactory<Node, Arc> {
         Node stub = new Node(source.getNumber());
         stub.setPotential(source.getPotential());
         stub.setDepth(source.getDepth());
-        stub.setProductivity(source.getProductivity());
+        stub.setIntensity(source.getIntensity());
         stub.setCapacity(source.getCapacity());
         stub.setCost(source.getCost());
         return stub;

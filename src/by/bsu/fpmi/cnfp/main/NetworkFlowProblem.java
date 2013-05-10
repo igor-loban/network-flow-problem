@@ -1,5 +1,6 @@
 package by.bsu.fpmi.cnfp.main;
 
+import by.bsu.fpmi.cnfp.exception.AntitheticalConstraints;
 import by.bsu.fpmi.cnfp.io.InputData;
 import by.bsu.fpmi.cnfp.io.OutputData;
 import by.bsu.fpmi.cnfp.main.net.AbstractNet;
@@ -16,16 +17,20 @@ public final class NetworkFlowProblem {
     }
 
     public static void solve(InputData inputData, OutputData outputData) {
-        Net net = inputData.parse();
-        FirstPhaseNet firstPhaseNet = net.createFirstPhaseNet();
+        try {
+            Net net = inputData.parse();
+            FirstPhaseNet firstPhaseNet = net.createFirstPhaseNet();
 
-        doFirstPhase(firstPhaseNet);
+            doFirstPhase(firstPhaseNet);
 
-        if (firstPhaseNet.hasSolution()) {
-            doSecondPhase(net, firstPhaseNet.getTree(), firstPhaseNet.getFlow());
+            if (firstPhaseNet.hasSolution()) {
+                doSecondPhase(net, firstPhaseNet.getTree(), firstPhaseNet.getFlow());
+            }
+
+            outputData.write(net);
+        } catch (AntitheticalConstraints e) {
+            outputData.writeError(e);
         }
-
-        outputData.write(net);
     }
 
     private static void doFirstPhase(FirstPhaseNet firstPhaseNet) {

@@ -7,4 +7,6 @@ import by.bsu.fpmi.cnfp.main.net.Net;
  */
 public interface OutputData {
     void write(Net net);
+
+    void writeError(Exception e);
 }

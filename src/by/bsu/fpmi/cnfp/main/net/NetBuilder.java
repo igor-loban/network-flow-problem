@@ -15,9 +15,10 @@ public class NetBuilder {
     private double eps;
     private int nodeCount;
     private int arcCount;
+    private int periodCount;
 
     public Net build() {
-        return new Net(nodes, arcs, eps, nodeCount, arcCount);
+        return new Net(nodes, arcs, eps, nodeCount, arcCount, periodCount);
     }
 
     public NetBuilder setEps(double eps) {
@@ -42,6 +43,11 @@ public class NetBuilder {
 
     public NetBuilder addArc(Arc arc) {
         arcs.put(arc.getNumber(), arc);
+        return this;
+    }
+
+    public NetBuilder setPeriodCount(int periodCount) {
+        this.periodCount = periodCount;
         return this;
     }
 }

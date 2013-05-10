@@ -17,12 +17,15 @@ public abstract class AbstractNet {
     protected Flow flow;
     protected int nodeCount;
     protected int arcCount;
+    protected int periodCount;
 
-    protected AbstractNet(Map<Integer, Node> nodes, Map<Integer, Arc> arcs, int nodeCount, int arcCount) {
+    protected AbstractNet(Map<Integer, Node> nodes, Map<Integer, Arc> arcs, int nodeCount, int arcCount,
+                          int periodCount) {
         this.nodes = nodes;
         this.arcs = arcs;
         this.nodeCount = nodeCount;
         this.arcCount = arcCount;
+        this.periodCount = periodCount;
     }
 
     public abstract boolean hasSolution();

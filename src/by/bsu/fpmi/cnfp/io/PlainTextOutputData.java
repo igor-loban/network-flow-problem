@@ -39,4 +39,12 @@ public class PlainTextOutputData implements OutputData {
 
         writer.close();
     }
+
+    @Override
+    public void writeError(Exception e) {
+        PrintWriter writer = new PrintWriter(outputStream);
+        writer.println("Problem has no solution.");
+        writer.println("Reason: " + e.getMessage());
+        writer.close();
+    }
 }
