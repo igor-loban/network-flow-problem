@@ -3,11 +3,11 @@ package by.bsu.fpmi.cnfp.main;
 import by.bsu.fpmi.cnfp.exception.AntitheticalConstraintsException;
 import by.bsu.fpmi.cnfp.io.InputData;
 import by.bsu.fpmi.cnfp.io.OutputData;
+import by.bsu.fpmi.cnfp.main.model.Flow;
+import by.bsu.fpmi.cnfp.main.model.Tree;
 import by.bsu.fpmi.cnfp.main.net.AbstractNet;
 import by.bsu.fpmi.cnfp.main.net.FirstPhaseNet;
-import by.bsu.fpmi.cnfp.main.model.Flow;
 import by.bsu.fpmi.cnfp.main.net.Net;
-import by.bsu.fpmi.cnfp.main.model.Tree;
 
 /**
  * @author Igor Loban
@@ -35,7 +35,7 @@ public final class NetworkFlowProblem {
     }
 
     private static void doSecondPhase(Net net, Tree tree, Flow flow) {
-        net.setInitialFlow(tree, flow);
+        net.setInitialParams(tree, flow);
         solveProblem(net);
     }
 

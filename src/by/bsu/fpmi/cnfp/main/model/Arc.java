@@ -55,7 +55,7 @@ public class Arc extends NumerableObject {
     }
 
     public void setFlow(double flow) {
-        this.flow = flow;
+        this.flow = Math.abs(flow);
     }
 
     public double getEstimate() {

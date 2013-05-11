@@ -15,7 +15,7 @@ public class TestLauncher {
     public static void main(String[] args) throws FileNotFoundException {
         System.out.println("Test has started.");
 
-        InputData inputData = new PlainTextInputData("input.txt");
+        InputData inputData = new PlainTextInputData("input2.txt");
         OutputData outputData = new PlainTextOutputData("output.txt");
         NetworkFlowProblem.solve(inputData, outputData);
 

@@ -33,13 +33,13 @@ public class Net extends AbstractNet {
         return new FirstPhaseNet(newNodes, newArcs, nodeCount, arcCount, periodCount);
     }
 
-    public void setInitialFlow(Tree tree, Flow flow) {
+    public void setInitialParams(Tree tree, Flow flow) {
         // TODO: implement initialization
     }
 
     @Override
     public boolean hasSolution() {
-        return tree != null && flow != null;
+        return false;
     }
 
     public void prepare() {

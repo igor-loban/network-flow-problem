@@ -1,6 +1,7 @@
 package by.bsu.fpmi.cnfp.main;
 
 import by.bsu.fpmi.cnfp.exception.AntitheticalConstraintsException;
+import by.bsu.fpmi.cnfp.exception.LogicalFailException;
 import by.bsu.fpmi.cnfp.main.model.Arc;
 import by.bsu.fpmi.cnfp.main.model.Node;
 import by.bsu.fpmi.cnfp.main.model.NumerableObject;
@@ -145,5 +146,25 @@ public final class AlgoUtils {
             nodes.add(arc.getEndNode());
         }
         return nodes;
+    }
+
+    public static void createInitialFlow(Map<Integer, Arc> arcs) {
+        for (Arc arc : arcs.values()) {
+            if (isArtificial(arc)) {
+                Node beginNode = arc.getBeginNode();
+                Node endNode = arc.getEndNode();
+                if (isArtificial(beginNode) && isArtificial(endNode)) {
+                    arc.setFlow(arc.getCapacity());
+                } else if (isArtificial(beginNode)) {
+                    arc.setFlow(endNode.getIntensity());
+                } else if (isArtificial(endNode)) {
+                    arc.setFlow(beginNode.getIntensity());
+                } else {
+                    throw new LogicalFailException("Artificial arc links two non-artificial nodes.");
+                }
+            } else {
+                arc.setFlow(0);
+            }
+        }
     }
 }

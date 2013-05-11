@@ -14,7 +14,6 @@ public abstract class AbstractNet {
     protected Map<Integer, Node> nodes;
     protected Map<Integer, Arc> arcs;
     protected Tree tree;
-    protected Flow flow;
     protected int nodeCount;
     protected int arcCount;
     protected int periodCount;
@@ -45,6 +44,10 @@ public abstract class AbstractNet {
     }
 
     public Flow getFlow() {
+        Flow flow = new Flow();
+        for (Arc arc : arcs.values()) {
+            flow.put(arc.getNumber(), arc.getFlow());
+        }
         return flow;
     }
 }

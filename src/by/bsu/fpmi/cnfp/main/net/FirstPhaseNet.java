@@ -23,9 +23,9 @@ public class FirstPhaseNet extends AbstractNet {
 
     // TODO: think about overriding below methods
     public void prepare() {
-        tree = AlgoUtils.createInitialTree(nodes);
         // Построить дерево и начальный поток
-        //      Поток равен абсолютным значениям интенсивностей узлов
+        tree = AlgoUtils.createInitialTree(nodes);
+        AlgoUtils.createInitialFlow(arcs);
 
         // Построить динамич опору Qr(op)
         // Посчитать псевдо-c(ij)
