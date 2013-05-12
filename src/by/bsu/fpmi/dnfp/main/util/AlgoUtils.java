@@ -182,4 +182,36 @@ public final class AlgoUtils {
         }
         return getRoot(parent, period);
     }
+
+    public static void calcPseudoCost(Tree tree) {
+        for (Arc fakeArc : tree.getFakeArcs()) {
+            int period = fakeArc.getPeriod();
+            Arc preBeginArc = ArcUtils.getArc(tree, period, fakeArc.getBeginNode());
+            Arc preEndArc = ArcUtils.getArc(tree, period, fakeArc.getEndNode());
+            double pseudoCost =
+                    preBeginArc.getCost() - preEndArc.getCost() + getPathCost(tree, fakeArc.getEndNode().getParent(),
+                            fakeArc.getBeginNode().getParent());
+            fakeArc.setCost(pseudoCost);
+        }
+    }
+
+    private static double getPathCost(Tree tree, Node endNode, Node beginNode) {
+        if (endNode.getPeriod() != beginNode.getPeriod()) {
+            throw new LogicalFailException("Path cost can be calculated for nodes from one period.");
+        }
+        return calcPathCost(endNode, beginNode, tree.getArcs());
+    }
+
+    private static double calcPathCost(Node endNode, Node beginNode, Set<Arc> arcs) {
+        if (endNode == beginNode) {
+            return 0;
+        }
+        Node preEndNode = endNode.getParent();
+        Arc arc = ArcUtils.getArc(arcs, preEndNode, endNode);
+        if (arc == null) {
+            throw new LogicalFailException("No arc between two nodes in tree.");
+        }
+        return (ArcUtils.isStraight(arc, preEndNode) ? arc.getCost() : -arc.getCost()) + calcPathCost(preEndNode,
+                beginNode, arcs);
+    }
 }

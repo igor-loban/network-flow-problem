@@ -3,6 +3,7 @@ package by.bsu.fpmi.dnfp.main.util;
 import by.bsu.fpmi.dnfp.exception.LogicalFailException;
 import by.bsu.fpmi.dnfp.main.model.Arc;
 import by.bsu.fpmi.dnfp.main.model.Node;
+import by.bsu.fpmi.dnfp.main.model.Tree;
 
 import java.util.HashSet;
 import java.util.Map;
@@ -13,6 +14,10 @@ import java.util.Set;
  */
 public final class ArcUtils {
     private ArcUtils() {
+    }
+
+    public static boolean isStraight(Arc arc, Node beginNode) {
+        return arc.getBeginNode() == beginNode;
     }
 
     public static void createArtificialArc(int arcNumber, Map<Integer, Arc> arcs, Node artificialNode, Node node) {
@@ -59,6 +64,26 @@ public final class ArcUtils {
             }
         }
         throw new LogicalFailException("No arc between two nodes in tree.");
+    }
+
+    public static Arc getArc(Tree tree, int period, Node endNode) {
+        Set<Arc> intermediateTreeArcs = getArcs(tree.getArcs(), -period);
+        for (Arc arc : intermediateTreeArcs) {
+            if (arc.getEndNode() == endNode) {
+                return arc;
+            }
+        }
+        throw new LogicalFailException("No arc between two nodes in tree.");
+    }
+
+    public static Arc getArc(Set<Arc> arcs, Node node1, Node node2) {
+        for (Arc arc : arcs) {
+            if ((arc.getBeginNode() == node1 && arc.getEndNode() == node2) || (arc.getBeginNode() == node2
+                    && arc.getEndNode() == node1)) {
+                return arc;
+            }
+        }
+        return null;
     }
 
     private static int getArcPeriod(Node beginNode, Node endNode) {

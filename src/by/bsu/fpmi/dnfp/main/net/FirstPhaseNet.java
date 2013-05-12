@@ -29,7 +29,7 @@ public class FirstPhaseNet extends AbstractNet {
         // Построить динамич опору Qr(op)
         AlgoUtils.createDynamicSupport(tree, periodCount);
         // Посчитать псевдо-c(ij)
-
+        AlgoUtils.calcPseudoCost(tree);
         // Посчитать потенциалы psi и ksi
     }
 
