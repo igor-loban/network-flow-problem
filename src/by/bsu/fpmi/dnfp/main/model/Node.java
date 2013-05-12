@@ -13,8 +13,8 @@ public class Node extends NumerableObject {
     private int cost;
     private double potential;
     private Sign sign = Sign.NONE;
-    private Node ancestor;
-    private Set<Node> descendants = new HashSet<>();
+    private Node parent;
+    private Set<Node> children = new HashSet<>();
     private Set<Arc> incomingArcs = new HashSet<>();
     private Set<Arc> exitArcs = new HashSet<>();
 
@@ -25,8 +25,8 @@ public class Node extends NumerableObject {
         super(number, period);
     }
 
-    public void addDescendant(Node node) {
-        descendants.add(node);
+    public void addChild(Node node) {
+        children.add(node);
     }
 
     public void addIncomingArc(Arc arc) {
@@ -93,20 +93,20 @@ public class Node extends NumerableObject {
         return exitArcs;
     }
 
-    public Set<Node> getDescendants() {
-        return descendants;
+    public Set<Node> getChildren() {
+        return children;
     }
 
-    public void setDescendants(Set<Node> descendants) {
-        this.descendants = descendants;
+    public void setChildren(Set<Node> children) {
+        this.children = children;
     }
 
-    public Node getAncestor() {
-        return ancestor;
+    public Node getParent() {
+        return parent;
     }
 
-    public void setAncestor(Node ancestor) {
-        this.ancestor = ancestor;
+    public void setParent(Node parent) {
+        this.parent = parent;
     }
 
     public static enum Sign {

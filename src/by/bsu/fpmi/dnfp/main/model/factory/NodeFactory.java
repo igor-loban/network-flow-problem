@@ -29,8 +29,8 @@ public final class NodeFactory implements NumerableObjectFactory<Node, Arc> {
     }
 
     public void fillStub(Node stub, Node source, Map<Integer, Node> nodes, Map<Integer, Arc> arcs) {
-        for (Node node : source.getDescendants()) {
-            stub.addDescendant(nodes.get(node.getNumber()));
+        for (Node node : source.getChildren()) {
+            stub.addChild(nodes.get(node.getNumber()));
         }
         for (Arc arc : source.getIncomingArcs()) {
             stub.addIncomingArc(arcs.get(arc.getNumber()));

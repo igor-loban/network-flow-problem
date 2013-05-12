@@ -94,8 +94,8 @@ public final class AlgoUtils {
         leafs.addAll(NodeUtils.getBeginNodes(incomingArcs));
         leafs.addAll(NodeUtils.getEndNodes(exitArcs));
         for (Node leaf : leafs) {
-            node.addDescendant(leaf);
-            leaf.setAncestor(node);
+            node.addChild(leaf);
+            leaf.setParent(node);
             populateTree(tree, leaf);
         }
     }
@@ -137,7 +137,7 @@ public final class AlgoUtils {
 
     private static void addIntermediateTreeArcs(Node parent, Set<Arc> collector) {
         int period = parent.getPeriod();
-        for (Node child : parent.getDescendants()) {
+        for (Node child : parent.getChildren()) {
             int childPeriod = child.getPeriod();
             if (period + 1 == childPeriod) {
                 Arc arc = ArcUtils.getArc(parent.getExitArcs(), child);
@@ -176,7 +176,7 @@ public final class AlgoUtils {
     }
 
     private static Node getRoot(Node node, int period) {
-        Node parent = node.getAncestor();
+        Node parent = node.getParent();
         if (parent == null || parent.getPeriod() != period) {
             return node;
         }
