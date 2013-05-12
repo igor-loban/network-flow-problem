@@ -37,4 +37,27 @@ public final class NodeUtils {
         }
         return nodes;
     }
+
+    public static Set<Node> getEndNodes(Set<Arc> arcs, Node beginNode) {
+        Set<Node> nodes = new HashSet<>();
+        for (Arc arc : arcs) {
+            if (arc.getBeginNode() == beginNode) {
+                nodes.add(arc.getEndNode());
+            }
+        }
+        return nodes;
+    }
+
+    public static boolean hasArcFromSet(Node node, Set<Arc> arcs) {
+        for (Arc arc : arcs) {
+            if (arc.getBeginNode() == node || arc.getEndNode() == node) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static boolean isNotMinusIntermediate(Node child, Node parent, int nodeCount) {
+        return (child.getNumber() != parent.getNumber() + nodeCount) || (child.getSign() != Node.Sign.MINUS);
+    }
 }

@@ -1,8 +1,6 @@
 package by.bsu.fpmi.dnfp.main.model;
 
 import by.bsu.fpmi.dnfp.main.util.AlgoUtils;
-import by.bsu.fpmi.dnfp.main.util.ArcUtils;
-import by.bsu.fpmi.dnfp.main.util.NodeUtils;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -23,9 +21,7 @@ public class Tree {
     }
 
     public Set<Node> getRoots(int period) {
-        Set<Arc> periodArcs = ArcUtils.getArcs(arcs, period);
-        Set<Node> periodNodes = NodeUtils.getNodes(periodArcs);
-        return AlgoUtils.getRoots(periodNodes, period);
+        return AlgoUtils.getRootByArcs(arcs, period);
     }
 
     public void addRoot(Node root) {

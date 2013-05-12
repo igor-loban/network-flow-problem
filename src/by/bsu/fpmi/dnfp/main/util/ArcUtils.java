@@ -29,7 +29,7 @@ public final class ArcUtils {
         Arc artificialArc = new Arc(arcNumber, getArcPeriod(beginNode, endNode));
         arcs.put(artificialArc.getNumber(), artificialArc);
         artificialArc.setCapacity(Math.abs(capacity));
-        artificialArc.setCost(Double.MAX_VALUE);
+        artificialArc.setCost(AlgoUtils.BIG_COST);
         if (capacity > 0 || capacity == 0) {
             setupLinks(beginNode, endNode, artificialArc);
         } else {

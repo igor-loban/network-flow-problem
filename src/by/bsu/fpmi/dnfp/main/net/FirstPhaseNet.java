@@ -31,6 +31,7 @@ public class FirstPhaseNet extends AbstractNet {
         // Посчитать псевдо-c(ij)
         AlgoUtils.calcPseudoCost(tree);
         // Посчитать потенциалы psi и ksi
+        AlgoUtils.calcPotentials(tree, nodeCount, periodCount);
     }
 
     public boolean isViolated() {

@@ -11,7 +11,7 @@ public class Node extends NumerableObject {
     private int intensity;
     private int capacity;
     private int cost;
-    private double potential;
+    private Double potential;
     private Sign sign = Sign.NONE;
     private Node parent;
     private Set<Node> children = new HashSet<>();
@@ -69,11 +69,11 @@ public class Node extends NumerableObject {
         this.cost = cost;
     }
 
-    public double getPotential() {
+    public Double getPotential() {
         return potential;
     }
 
-    public void setPotential(double potential) {
+    public void setPotential(Double potential) {
         this.potential = potential;
     }
 
@@ -95,10 +95,6 @@ public class Node extends NumerableObject {
 
     public Set<Node> getChildren() {
         return children;
-    }
-
-    public void setChildren(Set<Node> children) {
-        this.children = children;
     }
 
     public Node getParent() {

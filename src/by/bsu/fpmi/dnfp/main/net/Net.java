@@ -15,8 +15,6 @@ import java.util.Map;
  */
 public class Net extends AbstractNet {
     protected double eps;
-    private double subOptVal = 0; // TODO: think about theses values
-    private double step = 0;
 
     public Net(Map<Integer, Node> nodes, Map<Integer, Arc> arcs, double eps, int nodeCount, int arcCount,
                int periodCount) {
@@ -63,17 +61,11 @@ public class Net extends AbstractNet {
 
     public boolean isOptimized() {
         // Проверка критерия
-        return (1 - step) * subOptVal <= eps;
+        return false; //(1 - step) * subOptVal <= eps;
     }
 
     public void changeSupport() {
         // Замена опоры
         // Пересчет потенциалов
-    }
-
-    // TODO: think about this method
-    public double calcEstimates(int index) {
-        return arcs.get(index).getBeginNode().getPotential() -
-                arcs.get(index).getEndNode().getPotential() - arcs.get(index).getCost();
     }
 }

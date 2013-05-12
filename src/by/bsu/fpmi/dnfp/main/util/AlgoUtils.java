@@ -19,6 +19,8 @@ import java.util.Set;
  * @author Igor Loban
  */
 public final class AlgoUtils {
+    public static final Double BIG_COST = Math.pow(10, 3);
+
     private AlgoUtils() {
     }
 
@@ -135,15 +137,15 @@ public final class AlgoUtils {
         return intermediateTreeArcs;
     }
 
-    private static void addIntermediateTreeArcs(Node parent, Set<Arc> collector) {
+    private static void addIntermediateTreeArcs(Node parent, Set<Arc> arcCollector) {
         int period = parent.getPeriod();
         for (Node child : parent.getChildren()) {
             int childPeriod = child.getPeriod();
             if (period + 1 == childPeriod) {
                 Arc arc = ArcUtils.getArc(parent.getExitArcs(), child);
-                collector.add(arc);
+                arcCollector.add(arc);
             } else if (period == childPeriod) {
-                addIntermediateTreeArcs(child, collector);
+                addIntermediateTreeArcs(child, arcCollector);
             }
         }
     }
@@ -167,7 +169,26 @@ public final class AlgoUtils {
         }
     }
 
-    public static Set<Node> getRoots(Set<Node> nodes, int period) {
+    public static Set<Node> getRootByFakeArcs(Tree tree, int period) {
+        Set<Node> roots = new HashSet<>();
+        Set<Arc> periodTreeArcs = ArcUtils.getArcs(tree.getArcs(), period);
+        Set<Arc> periodFakeArcs = ArcUtils.getArcs(tree.getFakeArcs(), period);
+        Set<Node> periodNodes = NodeUtils.getNodes(periodFakeArcs);
+        for (Node node : periodNodes) {
+            if (node.getSign() == Node.Sign.PLUS && !NodeUtils.hasArcFromSet(node, periodTreeArcs)) {
+                roots.add(node);
+            }
+        }
+        return roots;
+    }
+
+    public static Set<Node> getRootByArcs(Set<Arc> arcs, int period) {
+        Set<Arc> periodArcs = ArcUtils.getArcs(arcs, period);
+        Set<Node> periodNodes = NodeUtils.getNodes(periodArcs);
+        return AlgoUtils.getRoots(periodNodes, period);
+    }
+
+    private static Set<Node> getRoots(Set<Node> nodes, int period) {
         Set<Node> roots = new HashSet<>();
         for (Node node : nodes) {
             roots.add(getRoot(node, period));
@@ -213,5 +234,71 @@ public final class AlgoUtils {
         }
         return (ArcUtils.isStraight(arc, preEndNode) ? arc.getCost() : -arc.getCost()) + calcPathCost(preEndNode,
                 beginNode, arcs);
+    }
+
+    public static void calcPotentials(Tree tree, int nodeCount, int periodCount) {
+        Set<Node> roots = tree.getRoots(periodCount - 1);
+        roots.addAll(getRootByFakeArcs(tree, periodCount - 1));
+        for (Node root : roots) {
+            root.setPotential(0.0);
+            calcPotentials(root, tree, nodeCount);
+        }
+    }
+
+    private static void calcPotentials(Node node, Tree tree, int nodeCount) {
+        for (Node child : node.getChildren()) {
+            if (child.getPotential() == null && NodeUtils.isNotMinusIntermediate(child, node, nodeCount)) {
+                calcChildPotential(child, node, tree);
+                calcPotentials(child, tree, nodeCount);
+            }
+        }
+
+        Node parent = node.getParent();
+        if (parent != null && parent.getPotential() == null && NodeUtils
+                .isNotMinusIntermediate(node, parent, nodeCount)) {
+            calcParentPotential(parent, node, tree);
+            calcPotentials(parent, tree, nodeCount);
+        }
+
+        if (node.getSign() != Node.Sign.NONE) {
+            if (node.getSign() == Node.Sign.PLUS) {
+                Set<Node> children = NodeUtils.getEndNodes(tree.getFakeArcs(), node);
+                for (Node child : children) {
+                    if (child.getPotential() == null) {
+                        calcChildPotential(child, node, tree);
+                        calcPotentials(child, tree, nodeCount);
+                    }
+                }
+            } else {
+                Arc fakeArc = ArcUtils.getArc(tree.getFakeArcs(), node);
+                Node fakeParent = fakeArc.getBeginNode();
+                if (fakeParent.getPotential() == null) {
+                    calcParentPotential(fakeParent, node, tree);
+                    calcPotentials(fakeParent, tree, nodeCount);
+                }
+            }
+        }
+    }
+
+    private static void calcChildPotential(Node child, Node parent, Tree tree) {
+        Arc arc = ArcUtils.getArc(tree.getArcs(), child, parent);
+        if (arc == null) {
+            arc = ArcUtils.getArc(tree.getFakeArcs(), child, parent);
+        }
+        child.setPotential(parent.getPotential() - arc.getCost());
+    }
+
+    private static void calcParentPotential(Node parent, Node child, Tree tree) {
+        Arc arc = ArcUtils.getArc(tree.getArcs(), parent, child);
+        if (arc == null) {
+            arc = ArcUtils.getArc(tree.getFakeArcs(), parent, child);
+        }
+        parent.setPotential(arc.getCost() + child.getPotential());
+    }
+
+    // TODO: think about this method
+    public static double calcEstimates(List<Arc> arcs, int index) {
+        return arcs.get(index).getBeginNode().getPotential() -
+                arcs.get(index).getEndNode().getPotential() - arcs.get(index).getCost();
     }
 }
