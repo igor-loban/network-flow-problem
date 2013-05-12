@@ -5,6 +5,7 @@ import by.bsu.fpmi.dnfp.main.model.Arc;
 import by.bsu.fpmi.dnfp.main.model.Node;
 import by.bsu.fpmi.dnfp.main.model.Tree;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -84,6 +85,16 @@ public final class ArcUtils {
             }
         }
         return null;
+    }
+
+    public static Set<Arc> getIntermediateArcs(Collection<Arc> arcs) {
+        Set<Arc> intermediateArcs = new HashSet<>();
+        for (Arc arc : arcs) {
+            if (arc.getPeriod() < 0) {
+                intermediateArcs.add(arc);
+            }
+        }
+        return intermediateArcs;
     }
 
     private static int getArcPeriod(Node beginNode, Node endNode) {

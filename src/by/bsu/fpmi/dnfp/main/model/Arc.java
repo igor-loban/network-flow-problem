@@ -11,6 +11,7 @@ public class Arc extends NumerableObject {
     private double cost;
     private double flow;
     private double estimate;
+    private double leap;
 
     public Arc() {
     }
@@ -73,5 +74,13 @@ public class Arc extends NumerableObject {
 
     public void setEstimate(double estimate) {
         this.estimate = estimate;
+    }
+
+    public double getLeap() {
+        return leap;
+    }
+
+    public void setLeap(double leap) {
+        this.leap = leap;
     }
 }

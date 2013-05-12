@@ -1,8 +1,8 @@
 package by.bsu.fpmi.dnfp.main.net;
 
-import by.bsu.fpmi.dnfp.main.util.AlgoUtils;
 import by.bsu.fpmi.dnfp.main.model.Arc;
 import by.bsu.fpmi.dnfp.main.model.Node;
+import by.bsu.fpmi.dnfp.main.util.AlgoUtils;
 
 import java.util.Map;
 
@@ -32,6 +32,7 @@ public class FirstPhaseNet extends AbstractNet {
         AlgoUtils.calcPseudoCost(tree);
         // Посчитать потенциалы psi и ksi
         AlgoUtils.calcPotentials(tree, nodeCount, periodCount);
+        AlgoUtils.calcLeaps(arcs.values());
     }
 
     public boolean isViolated() {

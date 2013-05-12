@@ -3,12 +3,13 @@ package by.bsu.fpmi.dnfp.main.util;
 import by.bsu.fpmi.dnfp.exception.AntitheticalConstraintsException;
 import by.bsu.fpmi.dnfp.exception.LogicalFailException;
 import by.bsu.fpmi.dnfp.main.model.Arc;
-import by.bsu.fpmi.dnfp.main.model.Tree;
 import by.bsu.fpmi.dnfp.main.model.Node;
 import by.bsu.fpmi.dnfp.main.model.NumerableObject;
+import by.bsu.fpmi.dnfp.main.model.Tree;
 import by.bsu.fpmi.dnfp.main.model.factory.NumerableObjectFactory;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -296,9 +297,16 @@ public final class AlgoUtils {
         parent.setPotential(arc.getCost() + child.getPotential());
     }
 
-    // TODO: think about this method
-    public static double calcEstimates(List<Arc> arcs, int index) {
-        return arcs.get(index).getBeginNode().getPotential() -
-                arcs.get(index).getEndNode().getPotential() - arcs.get(index).getCost();
+    public static void calcLeaps(Collection<Arc> arcs) {
+        Set<Arc> intermediateArcs = ArcUtils.getIntermediateArcs(arcs);
+        for (Arc arc : intermediateArcs) {
+            arc.setLeap(arc.getBeginNode().getPotential() - arc.getEndNode().getPotential() - arc.getCost());
+        }
     }
+
+    // TODO: think about this method
+//    private static double calcEstimates(List<Arc> arcs, int index) {
+//        return arcs.get(index).getBeginNode().getPotential() -
+//                arcs.get(index).getEndNode().getPotential() - arcs.get(index).getCost();
+//    }
 }
