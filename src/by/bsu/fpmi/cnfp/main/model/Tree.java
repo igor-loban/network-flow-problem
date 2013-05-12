@@ -1,5 +1,9 @@
 package by.bsu.fpmi.cnfp.main.model;
 
+import by.bsu.fpmi.cnfp.main.util.AlgoUtils;
+import by.bsu.fpmi.cnfp.main.util.ArcUtils;
+import by.bsu.fpmi.cnfp.main.util.NodeUtils;
+
 import java.util.HashSet;
 import java.util.Set;
 
@@ -7,14 +11,25 @@ import java.util.Set;
  * @author Igor Loban
  */
 public class Tree {
-    private Node root;
+    private Set<Node> roots = new HashSet<>(); // TODO: think about necessity
     private Set<Arc> arcs = new HashSet<>();
+    private Set<Arc> fakeArcs = new HashSet<>();
 
     public Tree() {
     }
 
     public Tree(Node root) {
-        this.root = root;
+        roots.add(root);
+    }
+
+    public Set<Node> getRoots(int period) {
+        Set<Arc> periodArcs = ArcUtils.getArcs(arcs, period);
+        Set<Node> periodNodes = NodeUtils.getNodes(periodArcs);
+        return AlgoUtils.getRoots(periodNodes, period);
+    }
+
+    public void addRoot(Node root) {
+        roots.add(root);
     }
 
     public Set<Arc> populate(Set<Arc> newArcs) {
@@ -28,15 +43,19 @@ public class Tree {
         return populatedArcs;
     }
 
-    public Node getRoot() {
-        return root;
-    }
-
-    public void setRoot(Node root) {
-        this.root = root;
-    }
-
     public Set<Arc> getArcs() {
         return arcs;
+    }
+
+    public void addFakeArc(Node beginNode, Node endNode) {
+        Arc arc = new Arc(0, beginNode.getPeriod());
+        arc.setBeginNode(beginNode);
+        arc.setEndNode(endNode);
+        arc.setFake(true);
+        fakeArcs.add(arc);
+    }
+
+    public Set<Arc> getFakeArcs() {
+        return fakeArcs;
     }
 }

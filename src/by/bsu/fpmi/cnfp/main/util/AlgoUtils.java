@@ -1,15 +1,17 @@
-package by.bsu.fpmi.cnfp.main;
+package by.bsu.fpmi.cnfp.main.util;
 
 import by.bsu.fpmi.cnfp.exception.AntitheticalConstraintsException;
 import by.bsu.fpmi.cnfp.exception.LogicalFailException;
 import by.bsu.fpmi.cnfp.main.model.Arc;
+import by.bsu.fpmi.cnfp.main.model.Tree;
 import by.bsu.fpmi.cnfp.main.model.Node;
 import by.bsu.fpmi.cnfp.main.model.NumerableObject;
-import by.bsu.fpmi.cnfp.main.model.Tree;
 import by.bsu.fpmi.cnfp.main.model.factory.NumerableObjectFactory;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -53,50 +55,26 @@ public final class AlgoUtils {
     public static void addArtificialNodes(Map<Integer, Node> nodes, Map<Integer, Arc> arcs, int nodeCount,
                                           int periodCount) {
         double totalIntensity = 0;
-        for (int period = 1, nodeNumber = -1, arcNumber = -1; period <= periodCount; period++, nodeNumber--) {
-            Node artificialNode = new Node(nodeNumber);
+        for (int period = 0, nodeNumber = -1, arcNumber = -1; period < periodCount; period++, nodeNumber--) {
+            Node artificialNode = new Node(nodeNumber, period);
             nodes.put(nodeNumber, artificialNode);
 
             if (nodeNumber < -1) {
                 if (totalIntensity < 0) {
                     throw new AntitheticalConstraintsException(
-                            "Total intensity of periods from 1 to " + period + " equals " + totalIntensity + ".");
+                            "Total intensity of periods from 0 to " + period + " equals " + totalIntensity + ".");
                 }
                 Node previousArtificialNode = nodes.get(nodeNumber + 1);
-                createArtificialArc(arcNumber--, arcs, totalIntensity, previousArtificialNode, artificialNode);
+                ArcUtils.createArtificialArc(arcNumber--, arcs, totalIntensity, previousArtificialNode, artificialNode);
             }
 
-            int maxNumber = period * nodeCount;
-            for (int number = (period - 1) * nodeCount + 1; number <= maxNumber; number++) {
+            int maxNumber = (period + 1) * nodeCount;
+            for (int number = period * nodeCount + 1; number <= maxNumber; number++) {
                 Node node = nodes.get(number);
-                createArtificialArc(arcNumber--, arcs, artificialNode, node);
+                ArcUtils.createArtificialArc(arcNumber--, arcs, artificialNode, node);
                 totalIntensity += node.getIntensity();
             }
         }
-    }
-
-    private static void createArtificialArc(int arcNumber, Map<Integer, Arc> arcs, Node artificialNode, Node node) {
-        createArtificialArc(arcNumber, arcs, node.getIntensity(), artificialNode, node);
-    }
-
-    private static void createArtificialArc(int arcNumber, Map<Integer, Arc> arcs, double capacity, Node beginNode,
-                                            Node endNode) {
-        Arc artificialArc = new Arc(arcNumber);
-        arcs.put(artificialArc.getNumber(), artificialArc);
-        artificialArc.setCapacity(Math.abs(capacity));
-        artificialArc.setCost(Double.MAX_VALUE);
-        if (capacity > 0 || capacity == 0) {
-            setupLinks(beginNode, endNode, artificialArc);
-        } else {
-            setupLinks(endNode, beginNode, artificialArc);
-        }
-    }
-
-    private static void setupLinks(Node beginNode, Node endNode, Arc arc) {
-        arc.setBeginNode(beginNode);
-        arc.setEndNode(endNode);
-        beginNode.addExitArc(arc);
-        endNode.addIncomingArc(arc);
     }
 
     /**
@@ -110,42 +88,16 @@ public final class AlgoUtils {
     }
 
     private static void populateTree(Tree tree, Node node) {
-        Set<Arc> incomingArcs = tree.populate(getArtificialArcs(node.getIncomingArcs()));
-        Set<Arc> exitArcs = tree.populate(getArtificialArcs(node.getExitArcs()));
+        Set<Arc> incomingArcs = tree.populate(ArcUtils.getArtificialArcs(node.getIncomingArcs()));
+        Set<Arc> exitArcs = tree.populate(ArcUtils.getArtificialArcs(node.getExitArcs()));
         Set<Node> leafs = new HashSet<>();
-        leafs.addAll(getBeginNodes(incomingArcs));
-        leafs.addAll(getEndNodes(exitArcs));
+        leafs.addAll(NodeUtils.getBeginNodes(incomingArcs));
+        leafs.addAll(NodeUtils.getEndNodes(exitArcs));
         for (Node leaf : leafs) {
             node.addDescendant(leaf);
             leaf.setAncestor(node);
             populateTree(tree, leaf);
         }
-    }
-
-    private static Set<Arc> getArtificialArcs(Set<Arc> arcs) {
-        Set<Arc> artificialArcs = new HashSet<>();
-        for (Arc arc : arcs) {
-            if (isArtificial(arc)) {
-                artificialArcs.add(arc);
-            }
-        }
-        return artificialArcs;
-    }
-
-    private static Set<Node> getBeginNodes(Set<Arc> arcs) {
-        Set<Node> nodes = new HashSet<>();
-        for (Arc arc : arcs) {
-            nodes.add(arc.getBeginNode());
-        }
-        return nodes;
-    }
-
-    private static Set<Node> getEndNodes(Set<Arc> arcs) {
-        Set<Node> nodes = new HashSet<>();
-        for (Arc arc : arcs) {
-            nodes.add(arc.getEndNode());
-        }
-        return nodes;
     }
 
     public static void createInitialFlow(Map<Integer, Arc> arcs) {
@@ -166,5 +118,68 @@ public final class AlgoUtils {
                 arc.setFlow(0);
             }
         }
+    }
+
+    public static void createDynamicSupport(Tree tree, int periodCount) {
+        for (int period = 0; period < periodCount - 1; period++) {
+            for (Node root : tree.getRoots(period)) {
+                Set<Arc> intermediateTreeArcs = getIntermediateTreeArcs(root);
+                addFakeArcs(intermediateTreeArcs, tree);
+            }
+        }
+    }
+
+    private static Set<Arc> getIntermediateTreeArcs(Node root) {
+        Set<Arc> intermediateTreeArcs = new HashSet<>();
+        addIntermediateTreeArcs(root, intermediateTreeArcs);
+        return intermediateTreeArcs;
+    }
+
+    private static void addIntermediateTreeArcs(Node parent, Set<Arc> collector) {
+        int period = parent.getPeriod();
+        for (Node child : parent.getDescendants()) {
+            int childPeriod = child.getPeriod();
+            if (period + 1 == childPeriod) {
+                Arc arc = ArcUtils.getArc(parent.getExitArcs(), child);
+                collector.add(arc);
+            } else if (period == childPeriod) {
+                addIntermediateTreeArcs(child, collector);
+            }
+        }
+    }
+
+    private static void addFakeArcs(Set<Arc> intermediateTreeArcs, Tree tree) {
+        if (intermediateTreeArcs.size() == 1) {
+            return;
+        }
+
+        List<Arc> arcs = new ArrayList<>(intermediateTreeArcs);
+        Node plusNode = arcs.remove(0).getEndNode();
+        plusNode.setSign(Node.Sign.PLUS);
+        Set<Node> minusNodes = new HashSet<>(arcs.size());
+        for (Arc arc : arcs) {
+            Node endNode = arc.getEndNode();
+            endNode.setSign(Node.Sign.MINUS);
+            minusNodes.add(endNode);
+        }
+        for (Node minusNode : minusNodes) {
+            tree.addFakeArc(plusNode, minusNode);
+        }
+    }
+
+    public static Set<Node> getRoots(Set<Node> nodes, int period) {
+        Set<Node> roots = new HashSet<>();
+        for (Node node : nodes) {
+            roots.add(getRoot(node, period));
+        }
+        return roots;
+    }
+
+    private static Node getRoot(Node node, int period) {
+        Node parent = node.getAncestor();
+        if (parent == null || parent.getPeriod() != period) {
+            return node;
+        }
+        return getRoot(parent, period);
     }
 }

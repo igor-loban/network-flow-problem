@@ -1,6 +1,6 @@
 package by.bsu.fpmi.cnfp.main.net;
 
-import by.bsu.fpmi.cnfp.main.AlgoUtils;
+import by.bsu.fpmi.cnfp.main.util.AlgoUtils;
 import by.bsu.fpmi.cnfp.main.model.Arc;
 import by.bsu.fpmi.cnfp.main.model.Node;
 
@@ -26,8 +26,8 @@ public class FirstPhaseNet extends AbstractNet {
         // Построить дерево и начальный поток
         tree = AlgoUtils.createInitialTree(nodes);
         AlgoUtils.createInitialFlow(arcs);
-
         // Построить динамич опору Qr(op)
+        AlgoUtils.createDynamicSupport(tree, periodCount);
         // Посчитать псевдо-c(ij)
         // Посчитать потенциалы psi и ksi
     }

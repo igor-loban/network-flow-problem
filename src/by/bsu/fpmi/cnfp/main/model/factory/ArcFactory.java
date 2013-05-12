@@ -19,7 +19,7 @@ public final class ArcFactory implements NumerableObjectFactory<Arc, Node> {
     }
 
     public Arc createStub(Arc source) {
-        Arc stub = new Arc(source.getNumber());
+        Arc stub = new Arc(source.getNumber(), source.getPeriod());
         stub.setCapacity(source.getCapacity());
         stub.setCost(source.getCost());
         stub.setFlow(source.getFlow());

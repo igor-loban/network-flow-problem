@@ -1,10 +1,10 @@
 package by.bsu.fpmi.cnfp.main.net;
 
-import by.bsu.fpmi.cnfp.main.AlgoUtils;
+import by.bsu.fpmi.cnfp.main.util.AlgoUtils;
 import by.bsu.fpmi.cnfp.main.model.Arc;
 import by.bsu.fpmi.cnfp.main.model.Flow;
-import by.bsu.fpmi.cnfp.main.model.Node;
 import by.bsu.fpmi.cnfp.main.model.Tree;
+import by.bsu.fpmi.cnfp.main.model.Node;
 import by.bsu.fpmi.cnfp.main.model.factory.ArcFactory;
 import by.bsu.fpmi.cnfp.main.model.factory.NodeFactory;
 
@@ -49,6 +49,7 @@ public class Net extends AbstractNet {
     }
 
     public boolean isViolated() {
+        // Проверка критерия
         return false;
     }
 
@@ -56,11 +57,12 @@ public class Net extends AbstractNet {
         // Посчитать оценки delta
         // Посчитать v и l
         // Посчитать шаг theta
+        // Пересчет оценки субоптимальности beta
         // Пересчет плана
     }
 
     public boolean isOptimized() {
-        // Пересчет оценки субоптимальности beta
+        // Проверка критерия
         return (1 - step) * subOptVal <= eps;
     }
 

@@ -19,7 +19,7 @@ public final class NodeFactory implements NumerableObjectFactory<Node, Arc> {
     }
 
     public Node createStub(Node source) {
-        Node stub = new Node(source.getNumber());
+        Node stub = new Node(source.getNumber(), source.getPeriod());
         stub.setPotential(source.getPotential());
         stub.setDepth(source.getDepth());
         stub.setIntensity(source.getIntensity());

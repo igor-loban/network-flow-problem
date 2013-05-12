@@ -48,8 +48,8 @@ public class PlainTextInputData implements InputData {
         while (scanner.hasNext()) {
             int nodeBase = periodCount * nodeCount;
             int arcBase = periodCount > 0 ? (periodCount - 1) * (arcCount + nodeCount) + arcCount : 0;
-            createNodes(nodes, builder, nodeBase, nodeCount);
-            createArcs(arcs, builder, arcBase, periodCount > 0 ? arcCount + nodeCount : arcCount);
+            createNodes(nodes, builder, nodeBase, nodeCount, periodCount);
+            createArcs(arcs, builder, arcBase, arcCount, periodCount > 0 ? nodeCount : 0, periodCount);
 
             for (int nodeNumber = nodeBase + 1; nodeNumber <= nodeBase + nodeCount; nodeNumber++) {
                 scanner.next();
@@ -81,19 +81,25 @@ public class PlainTextInputData implements InputData {
         return builder.setPeriodCount(periodCount).build();
     }
 
-    private void createNodes(Map<Integer, Node> nodes, NetBuilder builder, int nodeBase, int nodeCount) {
+    private void createNodes(Map<Integer, Node> nodes, NetBuilder builder, int nodeBase, int nodeCount, int period) {
         int nodeNumber = nodeBase;
         while (nodeNumber < nodeBase + nodeCount) {
-            Node node = new Node(++nodeNumber);
+            Node node = new Node(++nodeNumber, period);
             nodes.put(nodeNumber, node);
             builder.addNode(node);
         }
     }
 
-    private void createArcs(Map<Integer, Arc> arcs, NetBuilder builder, int arcBase, int arcCount) {
+    private void createArcs(Map<Integer, Arc> arcs, NetBuilder builder, int arcBase, int internalArcCount,
+                            int externalArcCount, int period) {
         int arcNumber = arcBase;
-        while (arcNumber < arcBase + arcCount) {
-            Arc arc = new Arc(++arcNumber);
+        for (int i = 0; i < internalArcCount; i++) {
+            Arc arc = new Arc(++arcNumber, period);
+            arcs.put(arcNumber, arc);
+            builder.addArc(arc);
+        }
+        for (int i = 0; i < externalArcCount; i++) {
+            Arc arc = new Arc(++arcNumber, -period - 1);
             arcs.put(arcNumber, arc);
             builder.addArc(arc);
         }

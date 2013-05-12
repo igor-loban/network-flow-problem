@@ -6,6 +6,7 @@ package by.bsu.fpmi.cnfp.main.model;
 public class Arc extends NumerableObject {
     private Node beginNode;
     private Node endNode;
+    private boolean fake;
     private double capacity;
     private double cost;
     private double flow;
@@ -14,8 +15,8 @@ public class Arc extends NumerableObject {
     public Arc() {
     }
 
-    public Arc(int number) {
-        super(number);
+    public Arc(int number, int period) {
+        super(number, period);
     }
 
     public Node getBeginNode() {
@@ -32,6 +33,14 @@ public class Arc extends NumerableObject {
 
     public void setEndNode(Node endNode) {
         this.endNode = endNode;
+    }
+
+    public boolean isFaked() {
+        return fake;
+    }
+
+    public void setFake(boolean fake) {
+        this.fake = fake;
     }
 
     public double getCapacity() {
