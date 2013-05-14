@@ -65,7 +65,7 @@ public final class AlgoUtils {
             if (nodeNumber < -1) {
                 if (totalIntensity < 0) {
                     throw new AntitheticalConstraintsException(
-                            "Total intensity of periods from 0 to " + period + " equals " + totalIntensity + ".");
+                            "total intensity of periods from 0 to " + period + " equals " + totalIntensity + ".");
                 }
                 Node previousArtificialNode = nodes.get(nodeNumber + 1);
                 ArcUtils.createArtificialArc(arcNumber--, arcs, totalIntensity, previousArtificialNode, artificialNode);
@@ -103,8 +103,8 @@ public final class AlgoUtils {
         }
     }
 
-    public static void createInitialFlow(Map<Integer, Arc> arcs) {
-        for (Arc arc : arcs.values()) {
+    public static void createInitialFlow(Collection<Arc> arcs) {
+        for (Arc arc : arcs) {
             if (isArtificial(arc)) {
                 Node beginNode = arc.getBeginNode();
                 Node endNode = arc.getEndNode();
@@ -115,7 +115,7 @@ public final class AlgoUtils {
                 } else if (isArtificial(endNode)) {
                     arc.setFlow(beginNode.getIntensity());
                 } else {
-                    throw new LogicalFailException("Artificial arc links two non-artificial nodes.");
+                    throw new LogicalFailException("artificial arc links two non-artificial nodes.");
                 }
             } else {
                 arc.setFlow(0);
@@ -219,7 +219,7 @@ public final class AlgoUtils {
 
     private static double getPathCost(Tree tree, Node endNode, Node beginNode) {
         if (endNode.getPeriod() != beginNode.getPeriod()) {
-            throw new LogicalFailException("Path cost can be calculated for nodes from one period.");
+            throw new LogicalFailException("path cost can be calculated for nodes from one period.");
         }
         return calcPathCost(endNode, beginNode, tree.getArcs());
     }
@@ -231,7 +231,7 @@ public final class AlgoUtils {
         Node preEndNode = endNode.getParent();
         Arc arc = ArcUtils.getArc(arcs, preEndNode, endNode);
         if (arc == null) {
-            throw new LogicalFailException("No arc between two nodes in tree.");
+            throw new LogicalFailException("no arc between two nodes in tree.");
         }
         return (ArcUtils.isStraight(arc, preEndNode) ? arc.getCost() : -arc.getCost()) + calcPathCost(preEndNode,
                 beginNode, arcs);
@@ -304,9 +304,41 @@ public final class AlgoUtils {
         }
     }
 
-    // TODO: think about this method
-//    private static double calcEstimates(List<Arc> arcs, int index) {
-//        return arcs.get(index).getBeginNode().getPotential() -
-//                arcs.get(index).getEndNode().getPotential() - arcs.get(index).getCost();
-//    }
+    public static void calcEstimates(Collection<Arc> arcs) {
+        for (Arc arc : arcs) {
+            if (arc.getPeriod() >= 0) {
+                Node beginNode = arc.getBeginNode();
+                Node endNode = arc.getEndNode();
+                arc.setEstimate(beginNode.getPotential() - endNode.getPotential() - arc.getCost());
+            }
+        }
+    }
+
+    public static double calcEpsU(Collection<Arc> arcs) {
+        double epsU = 0;
+        for (Arc arc : arcs) {
+            if (arc.getPeriod() >= 0) {
+                if (arc.getEstimate() >= 0) {
+                    epsU += arc.getEstimate() * (arc.getCapacity() - arc.getFlow());
+                } else {
+                    epsU -= arc.getEstimate() * arc.getFlow();
+                }
+            }
+        }
+        return epsU;
+    }
+
+    public static double calcEpsX(Collection<Arc> arcs) {
+        double epsX = 0;
+        for (Arc arc : arcs) {
+            if (arc.getPeriod() < 0) {
+                if (arc.getLeap() >= 0) {
+                    epsX += arc.getLeap() * (arc.getCapacity() - arc.getFlow());
+                } else {
+                    epsX -= arc.getLeap() * arc.getFlow();
+                }
+            }
+        }
+        return epsX;
+    }
 }

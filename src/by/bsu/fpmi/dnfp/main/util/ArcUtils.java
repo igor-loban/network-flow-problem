@@ -64,7 +64,7 @@ public final class ArcUtils {
                 return arc;
             }
         }
-        throw new LogicalFailException("No arc between two nodes in tree.");
+        throw new LogicalFailException("no arc between two nodes in tree.");
     }
 
     public static Arc getArc(Tree tree, int period, Node endNode) {
@@ -74,7 +74,7 @@ public final class ArcUtils {
                 return arc;
             }
         }
-        throw new LogicalFailException("No arc between two nodes in tree.");
+        throw new LogicalFailException("no arc between two nodes in tree.");
     }
 
     public static Arc getArc(Set<Arc> arcs, Node node1, Node node2) {

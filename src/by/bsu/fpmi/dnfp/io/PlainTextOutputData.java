@@ -35,7 +35,7 @@ public class PlainTextOutputData implements OutputData {
             writer.println("Solution: ...");
         } else {
             writer.println("Problem has no solution.");
-            writer.println("Reason: Constraints maybe are antithetical.");
+            writer.println("Reason: constraints maybe are antithetical.");
         }
 
         writer.close();

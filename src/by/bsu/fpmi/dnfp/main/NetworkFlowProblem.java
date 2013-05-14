@@ -1,6 +1,7 @@
 package by.bsu.fpmi.dnfp.main;
 
 import by.bsu.fpmi.dnfp.exception.AntitheticalConstraintsException;
+import by.bsu.fpmi.dnfp.exception.IterationLimitException;
 import by.bsu.fpmi.dnfp.io.InputData;
 import by.bsu.fpmi.dnfp.io.OutputData;
 import by.bsu.fpmi.dnfp.main.model.Flow;
@@ -25,7 +26,7 @@ public final class NetworkFlowProblem {
                 doSecondPhase(net, firstPhaseNet.getTree(), firstPhaseNet.getFlow());
             }
             outputData.write(net);
-        } catch (AntitheticalConstraintsException e) {
+        } catch (AntitheticalConstraintsException | IterationLimitException e) {
             outputData.writeError(e);
         }
     }

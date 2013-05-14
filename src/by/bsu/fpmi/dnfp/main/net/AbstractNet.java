@@ -14,17 +14,20 @@ public abstract class AbstractNet {
     protected Map<Integer, Node> nodes;
     protected Map<Integer, Arc> arcs;
     protected Tree tree;
+    protected int iterationCount;
     protected int nodeCount;
     protected int arcCount;
     protected int periodCount;
+    protected double eps;
 
     protected AbstractNet(Map<Integer, Node> nodes, Map<Integer, Arc> arcs, int nodeCount, int arcCount,
-                          int periodCount) {
+                          int periodCount, double eps) {
         this.nodes = nodes;
         this.arcs = arcs;
         this.nodeCount = nodeCount;
         this.arcCount = arcCount;
         this.periodCount = periodCount;
+        this.eps = eps;
     }
 
     public abstract boolean hasSolution();
@@ -38,6 +41,8 @@ public abstract class AbstractNet {
     public abstract boolean isOptimized();
 
     public abstract void changeSupport();
+
+    protected abstract void checkIterationLimit();
 
     public Tree getTree() {
         return tree;
