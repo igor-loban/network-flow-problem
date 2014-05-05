@@ -1,4 +1,4 @@
-    package by.bsu.fpmi.dnfp.main.net;
+package by.bsu.fpmi.dnfp.main.net;
 
 import by.bsu.fpmi.dnfp.exception.IterationLimitException;
 import by.bsu.fpmi.dnfp.main.model.Arc;
@@ -10,11 +10,11 @@ import java.util.Map;
 /**
  * @author Igor Loban
  */
-public class FirstPhaseNet extends AbstractNet {
+public final class FirstPhaseNet extends AbstractNet {
     protected static final int ITERATION_LIMIT = 10;
 
-    public FirstPhaseNet(Map<Integer, Node> nodes, Map<Integer, Arc> arcs, int nodeCount, int arcCount,
-                         int periodCount, double eps) {
+    public FirstPhaseNet(Map<Integer, Node> nodes, Map<Integer, Arc> arcs, int nodeCount, int arcCount, int periodCount,
+                         double eps) {
         super(nodes, arcs, nodeCount, arcCount, periodCount, eps);
     }
 
@@ -26,18 +26,13 @@ public class FirstPhaseNet extends AbstractNet {
 
     // TODO: think about overriding below methods
     public void prepare() {
-        // Построить дерево и начальный поток
-        tree = AlgoUtils.createInitialTree(nodes);
-        AlgoUtils.createInitialFlow(arcs.values());
-        // Построить динамич опору Qr(op)
-        AlgoUtils.createDynamicSupport(tree, periodCount);
-        // Посчитать псевдо-c(ij)
-        AlgoUtils.calcPseudoCost(tree);
-        // Посчитать потенциалы psi и ksi
-        AlgoUtils.calcPotentials(tree, nodeCount, periodCount);
-        AlgoUtils.calcLeaps(arcs.values());
-        // Посчитать оценки delta
-        AlgoUtils.calcEstimates(arcs.values());
+        tree = AlgoUtils.createInitialTree(nodes); // Построить дерево
+        AlgoUtils.createInitialFlow(arcs.values()); // Построить начальный поток
+        AlgoUtils.createDynamicSupport(tree, periodCount); // Построить динамич опору Qr(op)
+        AlgoUtils.calcPseudoCost(tree); // Посчитать псевдо-c(ij)
+        AlgoUtils.calcPotentials(tree, nodeCount, periodCount); // Посчитать потенциалы psi
+        AlgoUtils.calcLeaps(arcs.values()); // Посчитать потенциалы ksi
+        AlgoUtils.calcEstimates(arcs.values()); // Посчитать оценки delta
     }
 
     public boolean isViolated() {
@@ -47,10 +42,8 @@ public class FirstPhaseNet extends AbstractNet {
     }
 
     public void recalcPlan() {
-        // Посчитать оценки delta
-        AlgoUtils.calcEstimates(arcs.values());
-        // Посчитать v и l
-
+        AlgoUtils.calcEstimates(arcs.values()); // Посчитать оценки delta
+        AlgoUtils.calcDirections(this); // Посчитать направления v и l
 
         // Посчитать шаг theta
         // Пересчет плана
@@ -71,8 +64,8 @@ public class FirstPhaseNet extends AbstractNet {
     @Override
     protected void checkIterationLimit() {
         if (++iterationCount >= ITERATION_LIMIT) {
-            throw new IterationLimitException("iteration limit exception happened in the first phase (limit equals "
-                    + ITERATION_LIMIT + ").");
+            throw new IterationLimitException(
+                    "iteration limit exception happened in the first phase (limit equals " + ITERATION_LIMIT + ").");
         }
     }
 }

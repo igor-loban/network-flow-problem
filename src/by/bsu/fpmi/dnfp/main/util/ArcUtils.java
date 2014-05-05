@@ -14,6 +14,8 @@ import java.util.Set;
  * @author Igor Loban
  */
 public final class ArcUtils {
+    private static final double ESTIMATE_EPSILON = 1.0E-10;
+
     private ArcUtils() {
     }
 
@@ -108,5 +110,9 @@ public final class ArcUtils {
         arc.setEndNode(endNode);
         beginNode.addExitArc(arc);
         endNode.addIncomingArc(arc);
+    }
+
+    public static boolean hasZeroEstimate(Arc arc) {
+        return arc.getEstimate() <= ESTIMATE_EPSILON && arc.getEstimate() >= -ESTIMATE_EPSILON;
     }
 }

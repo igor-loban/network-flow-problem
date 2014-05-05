@@ -9,13 +9,13 @@ import java.util.Map;
  * @author Igor Loban
  */
 public final class NodeFactory implements NumerableObjectFactory<Node, Arc> {
-    private static final NodeFactory nodeFactory = new NodeFactory();
+    private static final NodeFactory NODE_FACTORY = new NodeFactory();
 
     private NodeFactory() {
     }
 
     public static NodeFactory getInstance() {
-        return nodeFactory;
+        return NODE_FACTORY;
     }
 
     public Node createStub(Node source) {

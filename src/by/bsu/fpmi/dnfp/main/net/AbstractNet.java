@@ -55,4 +55,32 @@ public abstract class AbstractNet {
         }
         return flow;
     }
+
+    public Map<Integer, Node> getNodes() {
+        return nodes;
+    }
+
+    public Map<Integer, Arc> getArcs() {
+        return arcs;
+    }
+
+    public int getIterationCount() {
+        return iterationCount;
+    }
+
+    public int getNodeCount() {
+        return nodeCount;
+    }
+
+    public int getArcCount() {
+        return arcCount;
+    }
+
+    public int getPeriodCount() {
+        return periodCount;
+    }
+
+    public double getEps() {
+        return eps;
+    }
 }

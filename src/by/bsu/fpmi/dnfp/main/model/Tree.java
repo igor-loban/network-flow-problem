@@ -30,12 +30,10 @@ public class Tree {
 
     public Set<Arc> populate(Set<Arc> newArcs) {
         Set<Arc> populatedArcs = new HashSet<>();
-        for (Arc arc : newArcs) {
-            if (!arcs.contains(arc)) {
-                arcs.add(arc);
-                populatedArcs.add(arc);
-            }
-        }
+        newArcs.stream().filter(arc -> !arcs.contains(arc)).forEach(arc -> {
+            arcs.add(arc);
+            populatedArcs.add(arc);
+        });
         return populatedArcs;
     }
 

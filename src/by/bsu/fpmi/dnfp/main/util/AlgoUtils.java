@@ -5,16 +5,20 @@ import by.bsu.fpmi.dnfp.exception.LogicalFailException;
 import by.bsu.fpmi.dnfp.main.model.Arc;
 import by.bsu.fpmi.dnfp.main.model.Node;
 import by.bsu.fpmi.dnfp.main.model.NumerableObject;
+import by.bsu.fpmi.dnfp.main.model.Support;
 import by.bsu.fpmi.dnfp.main.model.Tree;
 import by.bsu.fpmi.dnfp.main.model.factory.NumerableObjectFactory;
+import by.bsu.fpmi.dnfp.main.net.AbstractNet;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * @author Igor Loban
@@ -175,11 +179,9 @@ public final class AlgoUtils {
         Set<Arc> periodTreeArcs = ArcUtils.getArcs(tree.getArcs(), period);
         Set<Arc> periodFakeArcs = ArcUtils.getArcs(tree.getFakeArcs(), period);
         Set<Node> periodNodes = NodeUtils.getNodes(periodFakeArcs);
-        for (Node node : periodNodes) {
-            if (node.getSign() == Node.Sign.PLUS && !NodeUtils.hasArcFromSet(node, periodTreeArcs)) {
-                roots.add(node);
-            }
-        }
+        roots.addAll(periodNodes.stream()
+                .filter(node -> node.getSign() == Node.Sign.PLUS && !NodeUtils.hasArcFromSet(node, periodTreeArcs))
+                .collect(Collectors.toList()));
         return roots;
     }
 
@@ -190,11 +192,7 @@ public final class AlgoUtils {
     }
 
     private static Set<Node> getRoots(Set<Node> nodes, int period) {
-        Set<Node> roots = new HashSet<>();
-        for (Node node : nodes) {
-            roots.add(getRoot(node, period));
-        }
-        return roots;
+        return nodes.stream().map(node -> getRoot(node, period)).collect(Collectors.toSet());
     }
 
     private static Node getRoot(Node node, int period) {
@@ -247,12 +245,11 @@ public final class AlgoUtils {
     }
 
     private static void calcPotentials(Node node, Tree tree, int nodeCount) {
-        for (Node child : node.getChildren()) {
-            if (child.getPotential() == null && NodeUtils.isNotMinusIntermediate(child, node, nodeCount)) {
-                calcChildPotential(child, node, tree);
-                calcPotentials(child, tree, nodeCount);
-            }
-        }
+        node.getChildren().stream().filter(child -> child.getPotential() == null && NodeUtils
+                .isNotMinusIntermediate(child, node, nodeCount)).forEach(child -> {
+            calcChildPotential(child, node, tree);
+            calcPotentials(child, tree, nodeCount);
+        });
 
         Node parent = node.getParent();
         if (parent != null && parent.getPotential() == null && NodeUtils
@@ -264,12 +261,10 @@ public final class AlgoUtils {
         if (node.getSign() != Node.Sign.NONE) {
             if (node.getSign() == Node.Sign.PLUS) {
                 Set<Node> children = NodeUtils.getEndNodes(tree.getFakeArcs(), node);
-                for (Node child : children) {
-                    if (child.getPotential() == null) {
-                        calcChildPotential(child, node, tree);
-                        calcPotentials(child, tree, nodeCount);
-                    }
-                }
+                children.stream().filter(child -> child.getPotential() == null).forEach(child -> {
+                    calcChildPotential(child, node, tree);
+                    calcPotentials(child, tree, nodeCount);
+                });
             } else {
                 Arc fakeArc = ArcUtils.getArc(tree.getFakeArcs(), node);
                 Node fakeParent = fakeArc.getBeginNode();
@@ -305,13 +300,11 @@ public final class AlgoUtils {
     }
 
     public static void calcEstimates(Collection<Arc> arcs) {
-        for (Arc arc : arcs) {
-            if (arc.getPeriod() >= 0) {
-                Node beginNode = arc.getBeginNode();
-                Node endNode = arc.getEndNode();
-                arc.setEstimate(beginNode.getPotential() - endNode.getPotential() - arc.getCost());
-            }
-        }
+        arcs.stream().filter(arc -> arc.getPeriod() >= 0).forEach(arc -> {
+            Node beginNode = arc.getBeginNode();
+            Node endNode = arc.getEndNode();
+            arc.setEstimate(beginNode.getPotential() - endNode.getPotential() - arc.getCost());
+        });
     }
 
     public static double calcEpsU(Collection<Arc> arcs) {
@@ -340,5 +333,134 @@ public final class AlgoUtils {
             }
         }
         return epsX;
+    }
+
+    public static void calcDirections(AbstractNet net) {
+        int periodCount = net.getPeriodCount();
+        int nodeCount = net.getNodeCount();
+
+        // For a 0 period
+        Support support = getSupport(net.getTree(), 0);
+        double[][] A = getMatrixA(support, nodeCount);
+        double[][] PreF = getMatrixPreF(net.getArcs(), support, nodeCount, net.getArcCount(), 0);
+        double[] v = getNoSupportV(net.getTree(), 0);
+        double[] l = new double[nodeCount];
+        double[] result = AlgebraUtils.calcResult(A, l, PreF, v);
+        fillDirections(support, l, result, nodeCount);
+
+        for (int period = 1; period < periodCount; period++) {
+            support = getSupport(net.getTree(), period);
+            A = getMatrixA(support, nodeCount);
+            PreF = getMatrixPreF(net.getArcs(), support, nodeCount, net.getArcCount(), period);
+            v = getNoSupportV(net.getTree(), period);
+            result = AlgebraUtils.calcResult(A, l, PreF, v);
+            fillDirections(support, l, result, nodeCount);
+        }
+    }
+
+    private static void fillDirections(Support support, double[] l, double[] result, int nodeCount) {
+        List<Node> supportNodes = support.getSupportNodes();
+        int supportNodeSize = supportNodes.size();
+        for (int i = 0; i < supportNodeSize; i++) {
+            Node node = supportNodes.get(i);
+            node.setDirection(result[i]);
+            l[node.getNumber() % nodeCount] = result[i];
+        }
+
+        List<Arc> supportArcs = support.getSupportArcs();
+        for (int i = 0; i < supportArcs.size(); i++) {
+            supportArcs.get(i).setDirection(result[supportNodeSize + i]);
+        }
+    }
+
+    private static double[][] getMatrixA(Support support, int nodeCount) {
+        double A[][] = new double[nodeCount][];
+
+        int supportSize = support.getSize();
+        for (int i = 0; i < nodeCount; i++) {
+            A[i] = new double[supportSize];
+        }
+
+        List<Node> supportNodes = support.getSupportNodes();
+        int supportNodeSize = supportNodes.size();
+        for (int i = 0; i < supportNodeSize; i++) {
+            int row = supportNodes.get(i).getNumber() % nodeCount;
+            A[row][i] = 1;
+        }
+
+        List<Arc> supportArcs = support.getSupportArcs();
+        for (int i = 0, size = supportArcs.size(), column = supportNodeSize; i < size; i++, column++) {
+            Arc arc = supportArcs.get(i);
+            int row = arc.getBeginNode().getNumber() % nodeCount;
+            A[row][column] = 1;
+            row = arc.getEndNode().getNumber() % nodeCount;
+            A[row][column] = -1;
+        }
+
+        return A;
+    }
+
+    private static double[][] getMatrixPreF(Map<Integer, Arc> arcs, Support support, int nodeCount, int arcCount,
+                                            int period) {
+        List<Arc> noSupportArcs = new ArrayList<>();
+        Set<Integer> supportArcNumbers = new HashSet<>();
+        support.getSupportArcs().stream().forEach((arc) -> supportArcNumbers.add(arc.getNumber()));
+        int arcNumber = period > 0 ? (period - 1) * (arcCount + nodeCount) + arcCount : 0;
+        for (int limit = arcNumber + arcCount; arcNumber < limit; arcNumber++) {
+            if (!supportArcNumbers.contains(arcNumber)) {
+                noSupportArcs.add(arcs.get(arcNumber));
+            }
+        }
+
+        double[][] PreF = new double[nodeCount][];
+        int noSupportArcSize = noSupportArcs.size();
+        for (int i = 0; i < nodeCount; i++) {
+            PreF[i] = new double[noSupportArcSize];
+        }
+
+        for (int i = 0; i < noSupportArcSize; i++) {
+            Arc arc = noSupportArcs.get(i);
+            int row = arc.getBeginNode().getNumber() % nodeCount;
+            PreF[row][i] = 1;
+            row = arc.getEndNode().getNumber() % nodeCount;
+            PreF[row][i] = -1;
+        }
+
+        return PreF;
+    }
+
+    @SuppressWarnings("ForLoopReplaceableByForEach")
+    private static double[] getNoSupportV(Tree tree, int period) {
+        List<Double> noSupportV = new ArrayList<>();
+        List<Arc> arcs = new ArrayList<>(ArcUtils.getArcs(tree.getArcs(), period));
+        Collections.sort(arcs, (arc1, arc2) -> arc1.getNumber() - arc2.getNumber());
+        for (int i = 0; i < arcs.size(); i++) {
+            Arc arc = arcs.get(i);
+            if (!ArcUtils.hasZeroEstimate(arc)) {
+                noSupportV.add(arc.getEstimate() > 0 ? arc.getCapacity() - arc.getFlow() : -arc.getFlow());
+            }
+        }
+
+        double[] v = new double[noSupportV.size()];
+        for (int i = 0; i < noSupportV.size(); i++) {
+            v[i] = noSupportV.get(i);
+        }
+        return v;
+    }
+
+    private static Support getSupport(Tree tree, int period) {
+        List<Arc> supportArcs = new ArrayList<>();
+        List<Node> supportNodes = new ArrayList<>();
+
+        int intermediatePeriod = -period - 1;
+        for (Arc arc : tree.getArcs()) {
+            if (arc.getPeriod() == period) {
+                supportArcs.add(arc);
+            } else if (arc.getPeriod() == intermediatePeriod) {
+                supportNodes.add(arc.getBeginNode());
+            }
+        }
+
+        return new Support(period, supportArcs, supportNodes);
     }
 }
