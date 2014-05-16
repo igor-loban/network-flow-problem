@@ -1,9 +1,9 @@
 package by.bsu.fpmi.dnfp.io;
 
 import by.bsu.fpmi.dnfp.main.model.Arc;
+import by.bsu.fpmi.dnfp.main.model.Node;
 import by.bsu.fpmi.dnfp.main.net.Net;
 import by.bsu.fpmi.dnfp.main.net.NetBuilder;
-import by.bsu.fpmi.dnfp.main.model.Node;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -38,16 +38,15 @@ public class PlainTextInputData implements InputData {
         Map<Integer, Node> nodes = new HashMap<>();
         Map<Integer, Arc> arcs = new HashMap<>();
 
-        // Header
         int nodeCount = scanner.nextInt();
         int arcCount = scanner.nextInt();
         builder.setNodeCount(nodeCount).setArcCount(arcCount).setEps(scanner.nextDouble());
 
-        // Body
         int periodCount = 0;
         while (scanner.hasNext()) {
             int nodeBase = periodCount * nodeCount;
             int arcBase = periodCount > 0 ? (periodCount - 1) * (arcCount + nodeCount) + arcCount : 0;
+
             createNodes(nodes, builder, nodeBase, nodeCount, periodCount);
             createArcs(arcs, builder, arcBase, arcCount, periodCount > 0 ? nodeCount : 0, periodCount);
 
@@ -56,19 +55,15 @@ public class PlainTextInputData implements InputData {
                 parseNode(nodes.get(nodeNumber), scanner);
             }
 
-            if (periodCount > 0) {
-                int arcNumber = arcBase;
-                int nodeNumber = nodeBase;
-                for (int i = 0; i < nodeCount; i++) {
-                    addIntermediateArc(arcs.get(++arcNumber), nodes.get(++nodeNumber - nodeCount),
-                            nodes.get(nodeNumber));
-                }
-            }
-
-            int arcNumber = periodCount > 0 ? arcBase + nodeCount : arcBase;
+            int arcNumber = arcBase;
             for (int i = 0; i < arcCount; i++) {
                 scanner.next();
                 parseArc(arcs.get(++arcNumber), nodes, nodeBase, scanner);
+            }
+            if (periodCount > 0) {
+                for (int nodeNumber = nodeBase + 1; nodeNumber <= nodeBase + nodeCount; nodeNumber++) {
+                    addIntermediateArc(arcs.get(++arcNumber), nodes.get(nodeNumber - nodeCount), nodes.get(nodeNumber));
+                }
             }
 
             periodCount++;
@@ -99,7 +94,7 @@ public class PlainTextInputData implements InputData {
             builder.addArc(arc);
         }
         for (int i = 0; i < externalArcCount; i++) {
-            Arc arc = new Arc(++arcNumber, -period - 1);
+            Arc arc = new Arc(++arcNumber, -period);
             arcs.put(arcNumber, arc);
             builder.addArc(arc);
         }
