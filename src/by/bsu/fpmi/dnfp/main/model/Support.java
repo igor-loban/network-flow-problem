@@ -3,14 +3,20 @@ package by.bsu.fpmi.dnfp.main.model;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 public final class Support {
     private final int period;
     private final List<Arc> supportArcs;
+    private final List<Arc> noSupportArcs;
     private final List<Node> supportNodes;
+    private final Map<Integer, Integer> nodeNumbers;
 
-    public Support(int period, List<Arc> supportArcs, List<Node> supportNodes) {
+    public Support(int period, List<Arc> supportArcs, List<Arc> noSupportArcs, List<Node> supportNodes,
+                   Map<Integer, Integer> nodeNumbers) {
         this.period = period;
+        this.nodeNumbers = nodeNumbers;
+        this.noSupportArcs = noSupportArcs;
 
         List<Arc> tempArcs = new ArrayList<>(supportArcs);
         Collections.sort(tempArcs, (arc1, arc2) -> arc1.getNumber() - arc2.getNumber());
@@ -19,6 +25,10 @@ public final class Support {
         List<Node> tempNodes = new ArrayList<>(supportNodes);
         Collections.sort(tempNodes, (node1, node2) -> node1.getNumber() - node2.getNumber());
         this.supportNodes = Collections.unmodifiableList(tempNodes);
+    }
+
+    public int getIndex(Node node) {
+        return nodeNumbers.get(node.getNumber());
     }
 
     public int getSize() {
@@ -35,5 +45,9 @@ public final class Support {
 
     public List<Node> getSupportNodes() {
         return supportNodes;
+    }
+
+    public List<Arc> getNoSupportArcs() {
+        return noSupportArcs;
     }
 }

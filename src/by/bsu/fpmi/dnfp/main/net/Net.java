@@ -1,13 +1,13 @@
 package by.bsu.fpmi.dnfp.main.net;
 
 import by.bsu.fpmi.dnfp.exception.IterationLimitException;
-import by.bsu.fpmi.dnfp.main.util.AlgoUtils;
 import by.bsu.fpmi.dnfp.main.model.Arc;
 import by.bsu.fpmi.dnfp.main.model.Flow;
-import by.bsu.fpmi.dnfp.main.model.Tree;
 import by.bsu.fpmi.dnfp.main.model.Node;
+import by.bsu.fpmi.dnfp.main.model.Tree;
 import by.bsu.fpmi.dnfp.main.model.factory.ArcFactory;
 import by.bsu.fpmi.dnfp.main.model.factory.NodeFactory;
+import by.bsu.fpmi.dnfp.main.util.AlgoUtils;
 
 import java.util.Map;
 
@@ -28,7 +28,7 @@ public class Net extends AbstractNet {
         AlgoUtils.fillStubs(newNodes, nodes, newArcs, NodeFactory.getInstance());
         AlgoUtils.fillStubs(newArcs, arcs, newNodes, ArcFactory.getInstance());
         AlgoUtils.addArtificialNodes(newNodes, newArcs, nodeCount, periodCount);
-        return new FirstPhaseNet(newNodes, newArcs, nodeCount, arcCount, periodCount, eps);
+        return new FirstPhaseNet(newNodes, newArcs, newNodes.size(), newArcs.size(), periodCount, eps);
     }
 
     public void setInitialParams(Tree tree, Flow flow) {
@@ -72,8 +72,8 @@ public class Net extends AbstractNet {
     @Override
     protected void checkIterationLimit() {
         if (++iterationCount >= ITERATION_LIMIT) {
-            throw new IterationLimitException("iteration limit exception happened in the second phase (limit equals "
-                    + ITERATION_LIMIT + ").");
+            throw new IterationLimitException(
+                    "iteration limit exception happened in the second phase (limit equals " + ITERATION_LIMIT + ").");
         }
     }
 }

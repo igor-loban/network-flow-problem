@@ -102,7 +102,7 @@ public final class ArcUtils {
     private static int getArcPeriod(Node beginNode, Node endNode) {
         int beginPeriod = beginNode.getPeriod();
         int endPeriod = endNode.getPeriod();
-        return beginPeriod == endPeriod ? endPeriod : -endPeriod;
+        return beginPeriod == endPeriod ? endPeriod : -endPeriod - 1;
     }
 
     private static void setupLinks(Node beginNode, Node endNode, Arc arc) {

@@ -9,12 +9,9 @@ import java.util.Set;
  * @author Igor Loban
  */
 public class Tree {
-    private Set<Node> roots = new HashSet<>(); // TODO: think about necessity
+    private Set<Node> roots = new HashSet<>();
     private Set<Arc> arcs = new HashSet<>();
     private Set<Arc> fakeArcs = new HashSet<>();
-
-    public Tree() {
-    }
 
     public Tree(Node root) {
         roots.add(root);
@@ -22,10 +19,6 @@ public class Tree {
 
     public Set<Node> getRoots(int period) {
         return AlgoUtils.getRootByArcs(arcs, period);
-    }
-
-    public void addRoot(Node root) {
-        roots.add(root);
     }
 
     public Set<Arc> populate(Set<Arc> newArcs) {

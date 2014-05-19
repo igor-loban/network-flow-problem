@@ -12,12 +12,13 @@ import by.bsu.fpmi.dnfp.main.net.AbstractNet;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 /**
@@ -345,130 +346,136 @@ public final class AlgoUtils {
 
     public static void calcDirections(AbstractNet net) {
         int periodCount = net.getPeriodCount();
-        int nodeCount = net.getNodeCount();
+        int nodeCountPerPeriod = net.getNodeCount() / periodCount;
 
         // For a 0 period
-        Support support = getSupport(net.getTree(), 0);
-        double[][] A = getMatrixA(support, nodeCount);
-        double[][] PreF = getMatrixPreF(net.getArcs(), support, nodeCount, net.getArcCount(), 0);
-        double[] v = getNoSupportV(net.getTree(), 0);
-        double[] l = new double[nodeCount];
+        Support support = getSupport(net.getTree(), net.getArcs().values(), 0);
+        double[][] A = getMatrixA(support, nodeCountPerPeriod);
+        double[][] PreF = getMatrixPreF(support, nodeCountPerPeriod, 0);
+        double[] v = getNoSupportV(support.getNoSupportArcs());
+        double[] l = new double[nodeCountPerPeriod];
         double[] result = AlgebraUtils.calcResult(A, l, PreF, v);
-        fillDirections(support, l, result, nodeCount);
+        fillDirections(support, l, result);
 
         for (int period = 1; period < periodCount; period++) {
-            support = getSupport(net.getTree(), period);
-            A = getMatrixA(support, nodeCount);
-            PreF = getMatrixPreF(net.getArcs(), support, nodeCount, net.getArcCount(), period);
-            v = getNoSupportV(net.getTree(), period);
+            support = getSupport(net.getTree(), net.getArcs().values(), period);
+            A = getMatrixA(support, nodeCountPerPeriod);
+            PreF = getMatrixPreF(support, nodeCountPerPeriod, period);
+            v = getNoSupportV(support.getNoSupportArcs());
             result = AlgebraUtils.calcResult(A, l, PreF, v);
-            fillDirections(support, l, result, nodeCount);
+            fillDirections(support, l, result);
         }
     }
 
-    private static void fillDirections(Support support, double[] l, double[] result, int nodeCount) {
+    private static void fillDirections(Support support, double[] l, double[] result) {
         List<Node> supportNodes = support.getSupportNodes();
-        int supportNodeSize = supportNodes.size();
-        for (int i = 0; i < supportNodeSize; i++) {
+        int size = supportNodes.size();
+        int index = result.length - support.getSize();
+        for (int i = 0; i < size; i++, index++) {
             Node node = supportNodes.get(i);
-            node.setDirection(result[i]);
-            l[node.getNumber() % nodeCount] = result[i];
+            node.setDirection(result[index]);
+            l[support.getIndex(node)] = result[index];
         }
 
         List<Arc> supportArcs = support.getSupportArcs();
-        for (int i = 0; i < supportArcs.size(); i++) {
-            supportArcs.get(i).setDirection(result[supportNodeSize + i]);
+        for (int i = 0; i < supportArcs.size(); i++, index++) {
+            supportArcs.get(i).setDirection(result[index]);
         }
     }
 
-    private static double[][] getMatrixA(Support support, int nodeCount) {
-        double A[][] = new double[nodeCount][];
+    private static double[][] getMatrixA(Support support, int nodeCountPerPeriod) {
+        double A[][] = new double[nodeCountPerPeriod][];
 
-        int supportSize = support.getSize();
-        for (int i = 0; i < nodeCount; i++) {
-            A[i] = new double[supportSize];
+        for (int i = 0; i < nodeCountPerPeriod; i++) {
+            A[i] = new double[nodeCountPerPeriod];
         }
 
+        // TODO: thing about dirty hack
         List<Node> supportNodes = support.getSupportNodes();
-        int supportNodeSize = supportNodes.size();
-        for (int i = 0; i < supportNodeSize; i++) {
-            int row = supportNodes.get(i).getNumber() % nodeCount;
-            A[row][i] = 1;
+        int column = 0;
+        for (int i = 0; i < nodeCountPerPeriod - support.getSize(); i++, column++) {
+            A[i][column] = 1;
+        }
+
+        for (int i = 0; i < supportNodes.size(); i++, column++) {
+            int row = support.getIndex(supportNodes.get(i));
+            A[row][column] = 1;
         }
 
         List<Arc> supportArcs = support.getSupportArcs();
-        for (int i = 0, size = supportArcs.size(), column = supportNodeSize; i < size; i++, column++) {
+        for (int i = 0, size = supportArcs.size(); i < size; i++, column++) {
             Arc arc = supportArcs.get(i);
-            int row = arc.getBeginNode().getNumber() % nodeCount;
+            int row = support.getIndex(arc.getBeginNode());
             A[row][column] = 1;
-            row = arc.getEndNode().getNumber() % nodeCount;
+            row = support.getIndex(arc.getEndNode());
             A[row][column] = -1;
         }
 
         return A;
     }
 
-    private static double[][] getMatrixPreF(Map<Integer, Arc> arcs, Support support, int nodeCount, int arcCount,
-                                            int period) {
-        List<Arc> noSupportArcs = new ArrayList<>();
-        Set<Integer> supportArcNumbers = new HashSet<>();
-        support.getSupportArcs().stream().forEach((arc) -> supportArcNumbers.add(arc.getNumber()));
-        int arcNumber = period > 0 ? (period - 1) * (arcCount + nodeCount) + arcCount : 0;
-        for (int limit = arcNumber + arcCount; arcNumber < limit; arcNumber++) {
-            if (!supportArcNumbers.contains(arcNumber)) {
-                noSupportArcs.add(arcs.get(arcNumber));
-            }
-        }
-
-        double[][] PreF = new double[nodeCount][];
+    private static double[][] getMatrixPreF(Support support, int nodeCountPerPeriod, int period) {
+        List<Arc> noSupportArcs = support.getNoSupportArcs();
         int noSupportArcSize = noSupportArcs.size();
-        for (int i = 0; i < nodeCount; i++) {
+        double[][] PreF = new double[nodeCountPerPeriod][];
+        for (int i = 0; i < nodeCountPerPeriod; i++) {
             PreF[i] = new double[noSupportArcSize];
         }
 
         for (int i = 0; i < noSupportArcSize; i++) {
             Arc arc = noSupportArcs.get(i);
-            int row = arc.getBeginNode().getNumber() % nodeCount;
+            int row = support.getIndex(arc.getBeginNode());
             PreF[row][i] = 1;
-            row = arc.getEndNode().getNumber() % nodeCount;
+            row = support.getIndex(arc.getEndNode());
             PreF[row][i] = -1;
         }
 
         return PreF;
     }
 
-    @SuppressWarnings("ForLoopReplaceableByForEach")
-    private static double[] getNoSupportV(Tree tree, int period) {
+    private static double[] getNoSupportV(List<Arc> noSupportArcs) {
         List<Double> noSupportV = new ArrayList<>();
-        List<Arc> arcs = new ArrayList<>(ArcUtils.getArcs(tree.getArcs(), period));
-        Collections.sort(arcs, (arc1, arc2) -> arc1.getNumber() - arc2.getNumber());
-        for (int i = 0; i < arcs.size(); i++) {
-            Arc arc = arcs.get(i);
-            if (!ArcUtils.hasZeroEstimate(arc)) {
+        for (Arc arc : noSupportArcs) {
+            if (ArcUtils.hasZeroEstimate(arc)) {
+                noSupportV.add(0.0);
+            } else {
                 noSupportV.add(arc.getEstimate() > 0 ? arc.getCapacity() - arc.getFlow() : -arc.getFlow());
             }
         }
 
-        double[] v = new double[noSupportV.size()];
+        double[] result = new double[noSupportV.size()];
         for (int i = 0; i < noSupportV.size(); i++) {
-            v[i] = noSupportV.get(i);
+            result[i] = noSupportV.get(i);
         }
-        return v;
+        return result;
     }
 
-    private static Support getSupport(Tree tree, int period) {
+    private static Support getSupport(Tree tree, Collection<Arc> arcs, int period) {
         List<Arc> supportArcs = new ArrayList<>();
+        List<Arc> noSupportArcs;
         List<Node> supportNodes = new ArrayList<>();
+        Set<Node> nodes = new TreeSet<>(Comparator.<Node>comparingInt(NumerableObject::getNumber));
 
         int intermediatePeriod = -period - 1;
         for (Arc arc : tree.getArcs()) {
             if (arc.getPeriod() == period) {
                 supportArcs.add(arc);
+                nodes.add(arc.getBeginNode());
+                nodes.add(arc.getEndNode());
             } else if (arc.getPeriod() == intermediatePeriod) {
                 supportNodes.add(arc.getBeginNode());
             }
         }
 
-        return new Support(period, supportArcs, supportNodes);
+        noSupportArcs = arcs.stream().filter((arc) -> arc.getPeriod() == period && !supportArcs.contains(arc))
+                .sorted((arc1, arc2) -> arc1.getNumber() - arc2.getNumber()).collect(Collectors.toList());
+
+        Map<Integer, Integer> nodeNumbers = new HashMap<>();
+        int i = 0;
+        for (Node node : nodes) {
+            nodeNumbers.put(node.getNumber(), i++);
+        }
+
+        return new Support(period, supportArcs, noSupportArcs, supportNodes, nodeNumbers);
     }
 }

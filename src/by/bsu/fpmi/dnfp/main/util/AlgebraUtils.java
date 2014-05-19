@@ -1,25 +1,20 @@
 package by.bsu.fpmi.dnfp.main.util;
 
+import org.apache.commons.math3.linear.ArrayRealVector;
+import org.apache.commons.math3.linear.DecompositionSolver;
+import org.apache.commons.math3.linear.LUDecomposition;
+import org.apache.commons.math3.linear.MatrixUtils;
+import org.apache.commons.math3.linear.RealVector;
+
 public final class AlgebraUtils {
     private AlgebraUtils() {
         throw new AssertionError();
     }
 
-    public static void main(String[] args) {
-        double[][] A = { { 1, 2, 3 }, { -4, 5, -6 }, { 7, -8, 9 } };
-        double[] l = { 1, 2, 3 };
-        double[][] PreF = { { 1, 2 }, { -3, 4 }, { 5, -6 } };
-        double[] v = { 1, -1 };
-        double[] result = calcResult(A, l, PreF, v);
-        // 7, 1, -3
-        for (double value : result) {
-            System.out.println(value);
-        }
-    }
-
     public static double[] calcResult(double[][] A, double[] l, double[][] PreF, double[] v) {
-        double[][] B = getExpandMatrix(A, l, PreF, v);
-        return gaussianElimination(B);
+        DecompositionSolver solver = new LUDecomposition(MatrixUtils.createRealMatrix(A)).getSolver();
+        RealVector vector = solver.solve(new ArrayRealVector(getRightPart(l, PreF, v)));
+        return vector.toArray();
     }
 
     private static double[] gaussianElimination(double[][] B) {
@@ -46,21 +41,19 @@ public final class AlgebraUtils {
         return result;
     }
 
-    private static double[][] getExpandMatrix(double[][] A, double[] l, double[][] PreF, double[] v) {
-        double[][] B = new double[A.length][];
-        for (int i = 0; i < A.length; i++) {
-            B[i] = new double[A[i].length + 1];
-            System.arraycopy(A[i], 0, B[i], 0, A[i].length);
-            B[i][A[i].length] = calcRightElement(l, PreF, v, i);
+    private static double[] getRightPart(double[] l, double[][] PreF, double[] v) {
+        double[] result = new double[l.length];
+        for (int i = 0; i < l.length; i++) {
+            result[i] = calcRightElement(l, PreF, v, i);
         }
-        return B;
+        return result;
     }
 
     private static double calcRightElement(double[] l, double[][] PreF, double[] v, int row) {
-        double result = l[row];
+        double result = 0;
         for (int i = 0; i < PreF[row].length; i++) {
             result += PreF[row][i] * v[i];
         }
-        return result;
+        return l[row] - result;
     }
 }
