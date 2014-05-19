@@ -27,16 +27,16 @@ public final class ArcUtils {
         createArtificialArc(arcNumber, arcs, node.getIntensity(), artificialNode, node);
     }
 
-    public static void createArtificialArc(int arcNumber, Map<Integer, Arc> arcs, double capacity, Node beginNode,
+    public static void createArtificialArc(int arcNumber, Map<Integer, Arc> arcs, double rawCapacity, Node beginNode,
                                            Node endNode) {
         Arc artificialArc = new Arc(arcNumber, getArcPeriod(beginNode, endNode));
         arcs.put(artificialArc.getNumber(), artificialArc);
-        artificialArc.setCapacity(Math.abs(capacity));
+        artificialArc.setCapacity(Math.abs(rawCapacity));
         artificialArc.setCost(AlgoUtils.BIG_COST);
-        if (capacity > 0 || capacity == 0) {
-            setupLinks(beginNode, endNode, artificialArc);
-        } else {
+        if (rawCapacity >= 0) {
             setupLinks(endNode, beginNode, artificialArc);
+        } else {
+            setupLinks(beginNode, endNode, artificialArc);
         }
     }
 

@@ -72,7 +72,7 @@ public final class AlgoUtils {
                             "total intensity of periods from 0 to " + period + " equals " + totalIntensity + ".");
                 }
                 Node previousArtificialNode = nodes.get(nodeNumber + 1);
-                ArcUtils.createArtificialArc(arcNumber--, arcs, totalIntensity, previousArtificialNode, artificialNode);
+                ArcUtils.createArtificialArc(arcNumber--, arcs, totalIntensity, artificialNode, previousArtificialNode);
             }
 
             int maxNumber = (period + 1) * nodeCount;
@@ -113,7 +113,7 @@ public final class AlgoUtils {
                 Node beginNode = arc.getBeginNode();
                 Node endNode = arc.getEndNode();
                 if (isArtificial(beginNode) && isArtificial(endNode)) {
-                    arc.setFlow(arc.getCapacity());
+                    arc.setFlow(arc.getCapacity()); // TODO: ???
                 } else if (isArtificial(beginNode)) {
                     arc.setFlow(endNode.getIntensity());
                 } else if (isArtificial(endNode)) {
@@ -281,7 +281,11 @@ public final class AlgoUtils {
         if (arc == null) {
             arc = ArcUtils.getArc(tree.getFakeArcs(), child, parent);
         }
-        child.setPotential(parent.getPotential() - arc.getCost());
+        if (arc.getBeginNode() == child) {
+            child.setPotential(parent.getPotential() + arc.getCost());
+        } else {
+            child.setPotential(parent.getPotential() - arc.getCost());
+        }
     }
 
     private static void calcParentPotential(Node parent, Node child, Tree tree) {
@@ -289,7 +293,11 @@ public final class AlgoUtils {
         if (arc == null) {
             arc = ArcUtils.getArc(tree.getFakeArcs(), parent, child);
         }
-        parent.setPotential(arc.getCost() + child.getPotential());
+        if (arc.getBeginNode() == parent) {
+            parent.setPotential(child.getPotential() + arc.getCost());
+        } else {
+            parent.setPotential(child.getPotential() - arc.getCost());
+        }
     }
 
     public static void calcLeaps(Collection<Arc> arcs) {
