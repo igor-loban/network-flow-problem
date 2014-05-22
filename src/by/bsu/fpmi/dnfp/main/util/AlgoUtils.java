@@ -490,11 +490,161 @@ public final class AlgoUtils {
                 step = -arc.getFlow() / arc.getDirection();
             }
             arc.setStep(step);
-            if (minStep > step) {
+            if (minStep >= step) {
                 minStep = step;
                 minArc = arc;
             }
         }
         return minArc;
+    }
+
+    public static void changeSupport(AbstractNet net, Arc minArc) {
+        setupCostAliases(net.getTree(), minArc);
+        calcPseudoCostAliases(net.getTree());
+        calcPotentialAliases(net.getTree(), net.getNodeCount(), net.getPeriodCount());
+        Arc minArcAlias = getMinArcAlias(net.getArcs().values(), net.getTree().getArcs());
+        changeTree(net, minArc, minArcAlias);
+    }
+
+    private static void setupCostAliases(Tree tree, Arc minArc) {
+        tree.getArcs().stream().forEach((arc) -> arc.setCostAlias(0));
+        minArc.setCostAlias(Math.signum(minArc.getDirection()));
+    }
+
+    private static void calcPseudoCostAliases(Tree tree) {
+        for (Arc fakeArc : tree.getFakeArcs()) {
+            int period = fakeArc.getPeriod();
+            Arc preBeginArc = ArcUtils.getArc(tree, period, fakeArc.getBeginNode());
+            Arc preEndArc = ArcUtils.getArc(tree, period, fakeArc.getEndNode());
+            double pseudoCostAlias = preBeginArc.getCostAlias() - preEndArc.getCostAlias() + getPathCostAlias(tree,
+                    fakeArc.getEndNode().getParent(), fakeArc.getBeginNode().getParent());
+            fakeArc.setCostAlias(pseudoCostAlias);
+        }
+    }
+
+    private static double getPathCostAlias(Tree tree, Node endNode, Node beginNode) {
+        if (endNode.getPeriod() != beginNode.getPeriod()) {
+            throw new LogicalFailException("path cost alias can be calculated for nodes from one period.");
+        }
+        return calcPathCostAlias(endNode, beginNode, tree.getArcs());
+    }
+
+    private static double calcPathCostAlias(Node endNode, Node beginNode, Set<Arc> arcs) {
+        if (endNode == beginNode) {
+            return 0;
+        }
+        Node preEndNode = endNode.getParent();
+        Arc arc = ArcUtils.getArc(arcs, preEndNode, endNode);
+        if (arc == null) {
+            throw new LogicalFailException("no arc between two nodes in tree.");
+        }
+        return (ArcUtils.isStraight(arc, preEndNode) ? arc.getCostAlias() : -arc.getCostAlias()) + calcPathCostAlias(
+                preEndNode, beginNode, arcs);
+    }
+
+    public static void calcPotentialAliases(Tree tree, int nodeCount, int periodCount) {
+        Set<Node> roots = tree.getRoots(periodCount - 1);
+        roots.addAll(getRootByFakeArcs(tree, periodCount - 1));
+        for (Node root : roots) {
+            root.setPotentialAlias(0.0);
+            calcPotentialAliases(root, tree, nodeCount);
+        }
+    }
+
+    private static void calcPotentialAliases(Node node, Tree tree, int nodeCount) {
+        node.getChildren().stream().filter(child -> child.getPotentialAlias() == null && NodeUtils
+                .isNotMinusIntermediate(child, node, nodeCount)).forEach(child -> {
+            calcChildPotentialAlias(child, node, tree);
+            calcPotentialAliases(child, tree, nodeCount);
+        });
+
+        Node parent = node.getParent();
+        if (parent != null && parent.getPotentialAlias() == null && NodeUtils
+                .isNotMinusIntermediate(node, parent, nodeCount)) {
+            calcParentPotentialAlias(parent, node, tree);
+            calcPotentialAliases(parent, tree, nodeCount);
+        }
+
+        if (node.getSign() != Node.Sign.NONE) {
+            if (node.getSign() == Node.Sign.PLUS) {
+                Set<Node> children = NodeUtils.getEndNodes(tree.getFakeArcs(), node);
+                children.stream().filter(child -> child.getPotentialAlias() == null).forEach(child -> {
+                    calcChildPotentialAlias(child, node, tree);
+                    calcPotentialAliases(child, tree, nodeCount);
+                });
+            } else {
+                Arc fakeArc = ArcUtils.getArc(tree.getFakeArcs(), node);
+                Node fakeParent = fakeArc.getBeginNode();
+                if (fakeParent.getPotentialAlias() == null) {
+                    calcParentPotentialAlias(fakeParent, node, tree);
+                    calcPotentialAliases(fakeParent, tree, nodeCount);
+                }
+            }
+        }
+    }
+
+    private static void calcChildPotentialAlias(Node child, Node parent, Tree tree) {
+        Arc arc = ArcUtils.getArc(tree.getArcs(), child, parent);
+        if (arc == null) {
+            arc = ArcUtils.getArc(tree.getFakeArcs(), child, parent);
+        }
+        if (arc.getBeginNode() == child) {
+            child.setPotentialAlias(parent.getPotentialAlias() + arc.getCostAlias());
+        } else {
+            child.setPotentialAlias(parent.getPotentialAlias() - arc.getCostAlias());
+        }
+    }
+
+    private static void calcParentPotentialAlias(Node parent, Node child, Tree tree) {
+        Arc arc = ArcUtils.getArc(tree.getArcs(), parent, child);
+        if (arc == null) {
+            arc = ArcUtils.getArc(tree.getFakeArcs(), parent, child);
+        }
+        if (arc.getBeginNode() == parent) {
+            parent.setPotentialAlias(child.getPotentialAlias() + arc.getCostAlias());
+        } else {
+            parent.setPotentialAlias(child.getPotentialAlias() - arc.getCostAlias());
+        }
+    }
+
+    private static Arc getMinArcAlias(Collection<Arc> arcs, Set<Arc> treeArcs) {
+        double minStepAlias = Double.POSITIVE_INFINITY;
+        Arc minArcAlias = null;
+        for (Arc arc : arcs) {
+            if (treeArcs.contains(arc)) {
+                continue;
+            }
+
+            double stepAlias = Double.POSITIVE_INFINITY;
+            Node beginNode = arc.getBeginNode();
+            Node endNode = arc.getEndNode();
+            double delta = arc.getPeriod() >= 0 ? arc.getEstimate() : arc.getLeap();
+            double difference = beginNode.getPotentialAlias() - endNode.getPotentialAlias();
+            if (delta == 0) {
+                if ((difference > 0 && arc.getFlow() != arc.getCapacity()) || (difference < 0 && arc.getFlow() != 0)) {
+                    stepAlias = 0;
+                }
+            } else if (difference != 0 && delta / difference < 0) {
+                stepAlias = -delta / difference;
+            }
+
+            if (minStepAlias >= stepAlias) {
+                minStepAlias = stepAlias;
+                minArcAlias = arc;
+            }
+        }
+        return minArcAlias;
+    }
+
+    private static void changeTree(AbstractNet net, Arc minArc, Arc minArcAlias) {
+        if (minArc.getNumber() < 0) {
+            net.getArcs().remove(minArc.getNumber());
+        }
+        net.getTree().getArcs().remove(minArc);
+        net.getTree().getArcs().add(minArcAlias);
+    }
+
+    public static void recalcPlan(Collection<Arc> values, double step) {
+        values.stream().forEach((arc) -> arc.setFlow(arc.getFlow() + step * arc.getDirection()));
     }
 }

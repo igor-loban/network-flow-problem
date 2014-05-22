@@ -4,8 +4,6 @@ import by.bsu.fpmi.dnfp.exception.AntitheticalConstraintsException;
 import by.bsu.fpmi.dnfp.exception.IterationLimitException;
 import by.bsu.fpmi.dnfp.io.InputData;
 import by.bsu.fpmi.dnfp.io.OutputData;
-import by.bsu.fpmi.dnfp.main.model.Flow;
-import by.bsu.fpmi.dnfp.main.model.Tree;
 import by.bsu.fpmi.dnfp.main.net.AbstractNet;
 import by.bsu.fpmi.dnfp.main.net.FirstPhaseNet;
 import by.bsu.fpmi.dnfp.main.net.Net;
@@ -23,7 +21,7 @@ public final class NetworkFlowProblem {
             FirstPhaseNet firstPhaseNet = net.createFirstPhaseNet();
             doFirstPhase(firstPhaseNet);
             if (firstPhaseNet.hasSolution()) {
-                doSecondPhase(net, firstPhaseNet.getTree(), firstPhaseNet.getFlow());
+                System.out.println("Solution (flow): " + firstPhaseNet.getFlow());
             }
             outputData.write(net);
         } catch (AntitheticalConstraintsException | IterationLimitException e) {
@@ -35,19 +33,24 @@ public final class NetworkFlowProblem {
         solveProblem(firstPhaseNet);
     }
 
-    private static void doSecondPhase(Net net, Tree tree, Flow flow) {
-        net.setInitialParams(tree, flow);
-        solveProblem(net);
-    }
-
     private static void solveProblem(AbstractNet net) {
+        int iteration = 1;
         net.prepare();
-        if (net.isViolated()) {
+        System.out.println("Net prepared.");
+        if (!net.isViolated()) {
+            System.out.println("Net isn't violated.");
             net.recalcPlan();
+            System.out.println("Iteration " + iteration++ + ".");
+            System.out.println("Plan recalculated.");
             while (!net.isOptimized()) {
+                System.out.println("Plan isn't optimize.");
                 net.changeSupport();
+                System.out.println("Support changed.");
                 net.recalcPlan();
+                System.out.println("Iteration " + iteration++ + ".");
+                System.out.println("Plan recalculated.");
             }
         }
+        System.out.println("Problem solved.");
     }
 }

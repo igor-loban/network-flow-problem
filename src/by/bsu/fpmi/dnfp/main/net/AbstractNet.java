@@ -16,7 +16,7 @@ public abstract class AbstractNet {
     protected Tree tree;
     protected int iterationCount;
     protected int nodeCount;
-    protected int arcCount;
+    protected int arcCount; // TODO: remove
     protected int periodCount;
     protected double eps;
 

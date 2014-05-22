@@ -13,6 +13,7 @@ public class Node extends NumerableObject {
     private int cost;
     private double direction; // l
     private Double potential;
+    private Double potentialAlias; // mu
     private Sign sign = Sign.NONE;
     private Node parent;
     private Set<Node> children = new HashSet<>();
@@ -112,6 +113,14 @@ public class Node extends NumerableObject {
 
     public void setDirection(double direction) {
         this.direction = direction;
+    }
+
+    public Double getPotentialAlias() {
+        return potentialAlias;
+    }
+
+    public void setPotentialAlias(Double potentialAlias) {
+        this.potentialAlias = potentialAlias;
     }
 
     public static enum Sign {

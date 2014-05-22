@@ -10,10 +10,11 @@ public class Arc extends NumerableObject {
     private double capacity;
     private double cost;
     private double flow;
-    private double estimate;
-    private double leap;
+    private double estimate; // delta
+    private double leap; // ksi
     private double direction; // v or l
     private double step; // theta
+    private double costAlias;
 
     public Arc() {
     }
@@ -100,5 +101,13 @@ public class Arc extends NumerableObject {
 
     public void setStep(double step) {
         this.step = step;
+    }
+
+    public double getCostAlias() {
+        return costAlias;
+    }
+
+    public void setCostAlias(double costAlias) {
+        this.costAlias = costAlias;
     }
 }
