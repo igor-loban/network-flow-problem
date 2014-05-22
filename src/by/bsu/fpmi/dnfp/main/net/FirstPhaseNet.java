@@ -58,8 +58,7 @@ public final class FirstPhaseNet extends AbstractNet {
     public void recalcPlan() {
         AlgoUtils.calcEstimates(arcs.values()); // Посчитать оценки delta
         AlgoUtils.calcDirections(this); // Посчитать направления v и l
-
-        // Посчитать шаг theta
+        Arc minArc = AlgoUtils.calcSteps(tree.getArcs()); // Посчитать шаг theta
         // Пересчет плана
     }
 

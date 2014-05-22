@@ -478,4 +478,23 @@ public final class AlgoUtils {
 
         return new Support(period, supportArcs, noSupportArcs, supportNodes, nodeNumbers);
     }
+
+    public static Arc calcSteps(Set<Arc> arcs) {
+        double minStep = 1;
+        Arc minArc = null;
+        for (Arc arc : arcs) {
+            double step = Double.POSITIVE_INFINITY;
+            if (arc.getDirection() > 0) {
+                step = (arc.getCapacity() - arc.getFlow()) / arc.getDirection();
+            } else if (arc.getDirection() < 0) {
+                step = -arc.getFlow() / arc.getDirection();
+            }
+            arc.setStep(step);
+            if (minStep > step) {
+                minStep = step;
+                minArc = arc;
+            }
+        }
+        return minArc;
+    }
 }

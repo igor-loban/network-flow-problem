@@ -12,7 +12,8 @@ public class Arc extends NumerableObject {
     private double flow;
     private double estimate;
     private double leap;
-    private double direction; // v
+    private double direction; // v or l
+    private double step; // theta
 
     public Arc() {
     }
@@ -91,5 +92,13 @@ public class Arc extends NumerableObject {
 
     public void setDirection(double direction) {
         this.direction = direction;
+    }
+
+    public double getStep() {
+        return step;
+    }
+
+    public void setStep(double step) {
+        this.step = step;
     }
 }
