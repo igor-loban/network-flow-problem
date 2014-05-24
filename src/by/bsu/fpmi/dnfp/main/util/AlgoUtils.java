@@ -355,7 +355,7 @@ public final class AlgoUtils {
         double[] v = getNoSupportV(support.getNoSupportArcs());
         double[] l = new double[nodeCountPerPeriod];
         double[] result = AlgebraUtils.calcResult(A, l, PreF, v);
-        fillDirections(support, l, result);
+        fillDirections(support, l, result, nodeCountPerPeriod);
 
         for (int period = 1; period < periodCount; period++) {
             support = getSupport(net.getTree(), net.getArcs().values(), period);
@@ -363,18 +363,25 @@ public final class AlgoUtils {
             PreF = getMatrixPreF(support, nodeCountPerPeriod, period);
             v = getNoSupportV(support.getNoSupportArcs());
             result = AlgebraUtils.calcResult(A, l, PreF, v);
-            fillDirections(support, l, result);
+            fillDirections(support, l, result, nodeCountPerPeriod);
         }
     }
 
-    private static void fillDirections(Support support, double[] l, double[] result) {
+    private static void fillDirections(Support support, double[] l, double[] result, int nodeCountPerPeriod) {
         List<Node> supportNodes = support.getSupportNodes();
-        int size = supportNodes.size();
-        int index = result.length - support.getSize();
+        int delta = nodeCountPerPeriod - support.getSize();
+        int size = delta >= 0 ? supportNodes.size() : supportNodes.size() + delta;
+        int index = 0;
         for (int i = 0; i < size; i++, index++) {
             Node node = supportNodes.get(i);
             node.setDirection(result[index]);
             l[support.getIndex(node)] = result[index];
+        }
+
+        for (int i = size; i < supportNodes.size(); i++) {
+            Node node = supportNodes.get(i);
+            node.setDirection(0);
+            l[support.getIndex(node)] = 0;
         }
 
         List<Arc> supportArcs = support.getSupportArcs();
@@ -390,14 +397,16 @@ public final class AlgoUtils {
             A[i] = new double[nodeCountPerPeriod];
         }
 
-        // TODO: thing about dirty hack
+        // Dirty hack for last period (without support nodes)
         List<Node> supportNodes = support.getSupportNodes();
         int column = 0;
-        for (int i = 0; i < nodeCountPerPeriod - support.getSize(); i++, column++) {
+        int delta = nodeCountPerPeriod - support.getSize();
+        for (int i = 0; i < delta; i++, column++) {
             A[i][column] = 1;
         }
 
-        for (int i = 0; i < supportNodes.size(); i++, column++) {
+        int nodeLimit = delta >= 0 ? supportNodes.size() : supportNodes.size() + delta;
+        for (int i = 0; i < nodeLimit; i++, column++) {
             int row = support.getIndex(supportNodes.get(i));
             A[row][column] = 1;
         }
@@ -469,6 +478,10 @@ public final class AlgoUtils {
 
         noSupportArcs = arcs.stream().filter((arc) -> arc.getPeriod() == period && !supportArcs.contains(arc))
                 .sorted((arc1, arc2) -> arc1.getNumber() - arc2.getNumber()).collect(Collectors.toList());
+        for (Arc noSupportArc : noSupportArcs) {
+            nodes.add(noSupportArc.getBeginNode());
+            nodes.add(noSupportArc.getEndNode());
+        }
 
         Map<Integer, Integer> nodeNumbers = new HashMap<>();
         int i = 0;
