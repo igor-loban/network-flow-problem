@@ -349,39 +349,39 @@ public final class AlgoUtils {
         int nodeCountPerPeriod = net.getNodeCount() / periodCount;
 
         // For a 0 period
-        Support support = getSupport(net.getTree(), net.getArcs().values(), 0);
+        Support support = getSupport(net, net.getArcs().values(), 0, nodeCountPerPeriod);
         double[][] A = getMatrixA(support, nodeCountPerPeriod);
-        double[][] PreF = getMatrixPreF(support, nodeCountPerPeriod, 0);
+        double[][] PreF = getMatrixPreF(support, nodeCountPerPeriod);
         double[] v = getNoSupportV(support.getNoSupportArcs());
         double[] l = new double[nodeCountPerPeriod];
         double[] result = AlgebraUtils.calcResult(A, l, PreF, v);
-        fillDirections(support, l, result, nodeCountPerPeriod);
+        fillDirections(support, l, result);
 
         for (int period = 1; period < periodCount; period++) {
-            support = getSupport(net.getTree(), net.getArcs().values(), period);
+            support = getSupport(net, net.getArcs().values(), period, nodeCountPerPeriod);
             A = getMatrixA(support, nodeCountPerPeriod);
-            PreF = getMatrixPreF(support, nodeCountPerPeriod, period);
+            PreF = getMatrixPreF(support, nodeCountPerPeriod);
             v = getNoSupportV(support.getNoSupportArcs());
             result = AlgebraUtils.calcResult(A, l, PreF, v);
-            fillDirections(support, l, result, nodeCountPerPeriod);
+            fillDirections(support, l, result);
         }
     }
 
-    private static void fillDirections(Support support, double[] l, double[] result, int nodeCountPerPeriod) {
-        List<Node> supportNodes = support.getSupportNodes();
-        int delta = nodeCountPerPeriod - support.getSize();
-        int size = delta >= 0 ? supportNodes.size() : supportNodes.size() + delta;
-        int index = 0;
-        for (int i = 0; i < size; i++, index++) {
-            Node node = supportNodes.get(i);
-            node.setDirection(result[index]);
-            l[support.getIndex(node)] = result[index];
+    private static void fillDirections(Support support, double[] l, double[] result) {
+        for (int i = 0; i < l.length; i++) {
+            l[i] = 0;
         }
 
-        for (int i = size; i < supportNodes.size(); i++) {
+        List<Node> supportNodes = support.getSupportNodes();
+        List<Arc> supportNodableArcs = support.getSupportNodableArcs();
+        int index = 0;
+        for (int i = 0; i < supportNodableArcs.size(); i++, index++) {
             Node node = supportNodes.get(i);
-            node.setDirection(0);
-            l[support.getIndex(node)] = 0;
+            l[support.getIndex(node)] = result[index];
+            Arc arc = supportNodableArcs.get(i);
+            if (arc != null) {
+                arc.setDirection(result[index]);
+            }
         }
 
         List<Arc> supportArcs = support.getSupportArcs();
@@ -397,16 +397,9 @@ public final class AlgoUtils {
             A[i] = new double[nodeCountPerPeriod];
         }
 
-        // Dirty hack for last period (without support nodes)
         List<Node> supportNodes = support.getSupportNodes();
         int column = 0;
-        int delta = nodeCountPerPeriod - support.getSize();
-        for (int i = 0; i < delta; i++, column++) {
-            A[i][column] = 1;
-        }
-
-        int nodeLimit = delta >= 0 ? supportNodes.size() : supportNodes.size() + delta;
-        for (int i = 0; i < nodeLimit; i++, column++) {
+        for (int i = 0; i < supportNodes.size(); i++, column++) {
             int row = support.getIndex(supportNodes.get(i));
             A[row][column] = 1;
         }
@@ -423,7 +416,7 @@ public final class AlgoUtils {
         return A;
     }
 
-    private static double[][] getMatrixPreF(Support support, int nodeCountPerPeriod, int period) {
+    private static double[][] getMatrixPreF(Support support, int nodeCountPerPeriod) {
         List<Arc> noSupportArcs = support.getNoSupportArcs();
         int noSupportArcSize = noSupportArcs.size();
         double[][] PreF = new double[nodeCountPerPeriod][];
@@ -459,10 +452,13 @@ public final class AlgoUtils {
         return result;
     }
 
-    private static Support getSupport(Tree tree, Collection<Arc> arcs, int period) {
+    private static Support getSupport(AbstractNet net, Collection<Arc> arcs, int period, int nodeCountPerPeriod) {
+        Tree tree = net.getTree();
         List<Arc> supportArcs = new ArrayList<>();
         List<Arc> noSupportArcs;
+        List<Arc> supportNodableArcs = new ArrayList<>();
         List<Node> supportNodes = new ArrayList<>();
+        List<Node> supportArcableNodes = new ArrayList<>();
         Set<Node> nodes = new TreeSet<>(Comparator.<Node>comparingInt(NumerableObject::getNumber));
 
         int intermediatePeriod = -period - 1;
@@ -473,15 +469,33 @@ public final class AlgoUtils {
                 nodes.add(arc.getEndNode());
             } else if (arc.getPeriod() == intermediatePeriod) {
                 supportNodes.add(arc.getBeginNode());
+                supportArcableNodes.add(arc.getBeginNode());
             }
         }
 
         noSupportArcs = arcs.stream().filter((arc) -> arc.getPeriod() == period && !supportArcs.contains(arc))
                 .sorted((arc1, arc2) -> arc1.getNumber() - arc2.getNumber()).collect(Collectors.toList());
-        for (Arc noSupportArc : noSupportArcs) {
-            nodes.add(noSupportArc.getBeginNode());
-            nodes.add(noSupportArc.getEndNode());
+
+        net.getNodes().values().stream().filter((node) -> node.getPeriod() == period && !nodes.contains(node))
+                .forEach(supportNodes::add);
+
+        int delta = nodeCountPerPeriod - supportArcs.size() - supportNodes.size();
+        for (int i = 0; i < delta; i++) {
+            supportNodes.add(supportArcs.get(i).getEndNode());
         }
+        for (int i = -delta; i > 0; i--) {
+            Node node = supportArcableNodes.remove(0);
+            supportNodes.remove(node);
+            Arc arc = ArcUtils.getIntermediateArc(node);
+            if (arc != null) {
+                arc.setDirection(0);
+            }
+        }
+
+        supportNodes.stream().forEach((node) -> {
+            nodes.add(node);
+            supportNodableArcs.add(ArcUtils.getIntermediateArc(node));
+        });
 
         Map<Integer, Integer> nodeNumbers = new HashMap<>();
         int i = 0;
@@ -489,7 +503,7 @@ public final class AlgoUtils {
             nodeNumbers.put(node.getNumber(), i++);
         }
 
-        return new Support(period, supportArcs, noSupportArcs, supportNodes, nodeNumbers);
+        return new Support(period, supportArcs, noSupportArcs, supportNodableArcs, supportNodes, nodeNumbers);
     }
 
     public static Arc calcSteps(Set<Arc> arcs) {

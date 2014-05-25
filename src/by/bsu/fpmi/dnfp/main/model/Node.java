@@ -11,7 +11,6 @@ public class Node extends NumerableObject {
     private int intensity;
     private int capacity;
     private int cost;
-    private double direction; // l
     private Double potential;
     private Double potentialAlias; // mu
     private Sign sign = Sign.NONE;
@@ -105,14 +104,6 @@ public class Node extends NumerableObject {
 
     public void setParent(Node parent) {
         this.parent = parent;
-    }
-
-    public double getDirection() {
-        return direction;
-    }
-
-    public void setDirection(double direction) {
-        this.direction = direction;
     }
 
     public Double getPotentialAlias() {

@@ -5,6 +5,7 @@ import org.apache.commons.math3.linear.DecompositionSolver;
 import org.apache.commons.math3.linear.LUDecomposition;
 import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.RealVector;
+import org.apache.commons.math3.linear.SingularMatrixException;
 
 public final class AlgebraUtils {
     private AlgebraUtils() {
@@ -12,33 +13,22 @@ public final class AlgebraUtils {
     }
 
     public static double[] calcResult(double[][] A, double[] l, double[][] PreF, double[] v) {
-        DecompositionSolver solver = new LUDecomposition(MatrixUtils.createRealMatrix(A)).getSolver();
-        RealVector vector = solver.solve(new ArrayRealVector(getRightPart(l, PreF, v)));
-        return vector.toArray();
-    }
-
-    private static double[] gaussianElimination(double[][] B) {
-        int n = B.length;
-        double[] result = new double[n];
-
-        for (int i = 0; i < n - 1; i++) {
-            for (int j = i + 1; j < n; j++) {
-                double c = B[j][i] / B[i][i];
-                for (int k = i + 1; k < B[j].length; k++) {
-                    B[j][k] -= B[i][k] * c;
-                }
+        double[] rightPart = getRightPart(l, PreF, v);
+        for (int i = 0; i < A.length; i++) {
+            for (int j = 0; j < A[i].length; j++) {
+                System.out.print(A[i][j] + " ");
             }
+            System.out.println(rightPart[i]);
         }
 
-        result[n - 1] = B[n - 1][n] / B[n - 1][n - 1];
-        for (int i = n - 2; i >= 0; i--) {
-            for (int j = i + 1; j < n; j++) {
-                B[i][n] -= result[j] * B[i][j];
-            }
-            result[i] = B[i][n] / B[i][i];
+        try {
+            DecompositionSolver solver = new LUDecomposition(MatrixUtils.createRealMatrix(A)).getSolver();
+            RealVector vector = solver.solve(new ArrayRealVector(rightPart));
+            return vector.toArray();
+        } catch (SingularMatrixException e) {
+            System.out.println("SingularMatrixException happen - result is zero vector.");
+            return new double[A.length];
         }
-
-        return result;
     }
 
     private static double[] getRightPart(double[] l, double[][] PreF, double[] v) {

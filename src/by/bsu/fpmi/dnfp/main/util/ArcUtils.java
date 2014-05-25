@@ -19,6 +19,15 @@ public final class ArcUtils {
     private ArcUtils() {
     }
 
+    public static Arc getIntermediateArc(Node node) {
+        for (Arc arc : node.getExitArcs()) {
+            if (arc.getPeriod() < 0) {
+                return arc;
+            }
+        }
+        return null;
+    }
+
     public static boolean isStraight(Arc arc, Node beginNode) {
         return arc.getBeginNode() == beginNode;
     }

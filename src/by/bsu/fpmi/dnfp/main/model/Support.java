@@ -9,14 +9,17 @@ public final class Support {
     private final int period;
     private final List<Arc> supportArcs;
     private final List<Arc> noSupportArcs;
+    private final List<Arc> supportNodableArcs;
     private final List<Node> supportNodes;
     private final Map<Integer, Integer> nodeNumbers;
 
-    public Support(int period, List<Arc> supportArcs, List<Arc> noSupportArcs, List<Node> supportNodes,
+    public Support(int period, List<Arc> supportArcs, List<Arc> noSupportArcs, List<Arc> supportNodableArcs,
+                   List<Node> supportNodes,
                    Map<Integer, Integer> nodeNumbers) {
         this.period = period;
         this.nodeNumbers = nodeNumbers;
         this.noSupportArcs = noSupportArcs;
+        this.supportNodableArcs = supportNodableArcs;
 
         List<Arc> tempArcs = new ArrayList<>(supportArcs);
         Collections.sort(tempArcs, (arc1, arc2) -> arc1.getNumber() - arc2.getNumber());
@@ -49,5 +52,9 @@ public final class Support {
 
     public List<Arc> getNoSupportArcs() {
         return noSupportArcs;
+    }
+
+    public List<Arc> getSupportNodableArcs() {
+        return supportNodableArcs;
     }
 }
