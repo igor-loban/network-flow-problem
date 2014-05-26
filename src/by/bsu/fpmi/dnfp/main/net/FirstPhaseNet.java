@@ -46,6 +46,7 @@ public final class FirstPhaseNet extends AbstractNet {
         double epsU = AlgoUtils.calcEpsU(arcs.values());
         double epsX = AlgoUtils.calcEpsX(arcs.values());
         beta = epsU + epsX;
+        System.out.println("Beta = " + beta);
         return beta < eps;
     }
 
@@ -54,6 +55,7 @@ public final class FirstPhaseNet extends AbstractNet {
         AlgoUtils.calcDirections(this); // Посчитать направления v и l
         minArc = AlgoUtils.calcSteps(tree.getArcs()); // Посчитать шаг theta
         AlgoUtils.recalcPlan(arcs.values(), minArc.getStep()); // Пересчитать поток
+
     }
 
     public boolean isOptimized() {

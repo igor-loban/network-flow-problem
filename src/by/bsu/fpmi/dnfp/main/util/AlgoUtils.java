@@ -338,6 +338,7 @@ public final class AlgoUtils {
 
         // For a 0 period
         Support support = getSupport(net, net.getArcs().values(), 0, nodeCountPerPeriod);
+        //TODO: сделать, чтобы при отсутсвии неопорных дуг, не пыталась составляться матрица
         double[][] A = getMatrixA(support, nodeCountPerPeriod);
         double[][] PreF = getMatrixPreF(support, nodeCountPerPeriod);
         double[] v = getNoSupportV(support.getNoSupportArcs());
@@ -657,21 +658,52 @@ public final class AlgoUtils {
     private static void changeTree(AbstractNet net, Arc minArc, Arc minArcAlias) {
         if (minArc.getNumber() < 0) {
             net.getArcs().remove(minArc.getNumber());
+            net.setArcCount(net.getArcCount() - 1);
 
             Node beginNode = minArc.getBeginNode();
             beginNode.getExitArcs().remove(minArc);
             if (beginNode.getIncomingArcs().isEmpty() && beginNode.getExitArcs().isEmpty()) {
                 net.getNodes().remove(beginNode.getNumber());
+                net.setNodeCount(net.getNodeCount() - 1);
             }
 
             Node endNode = minArc.getEndNode();
             endNode.getIncomingArcs().remove(minArc);
             if (endNode.getIncomingArcs().isEmpty() && endNode.getExitArcs().isEmpty()) {
                 net.getNodes().remove(endNode.getNumber());
+                net.setNodeCount(net.getNodeCount() - 1);
             }
         }
+
+        System.out.println("Remove " + minArc.getBeginNode().getNumber() + "->" + minArc.getEndNode().getNumber());
         net.getTree().getArcs().remove(minArc);
+        System.out.println("Add " + minArcAlias.getBeginNode().getNumber() + "->" + minArcAlias.getEndNode().getNumber());
         net.getTree().getArcs().add(minArcAlias);
+
+        Iterator<Arc> iterator = net.getArcs().values().iterator();
+        while (iterator.hasNext()) {
+            Arc arc = iterator.next();
+            if (arc.getNumber() < 0 && arc.getFlow() <= 0.00000001) {
+                iterator.remove();
+                net.setArcCount(net.getArcCount() - 1);
+                System.out.println("Remove " + arc.getBeginNode().getNumber() + "->" + arc.getEndNode().getNumber());
+                net.getTree().getArcs().remove(arc);
+
+                Node beginNode = arc.getBeginNode();
+                beginNode.getExitArcs().remove(arc);
+                if (beginNode.getIncomingArcs().isEmpty() && beginNode.getExitArcs().isEmpty()) {
+                    net.getNodes().remove(beginNode.getNumber());
+                    net.setNodeCount(net.getNodeCount() - 1);
+                }
+
+                Node endNode = arc.getEndNode();
+                endNode.getIncomingArcs().remove(arc);
+                if (endNode.getIncomingArcs().isEmpty() && endNode.getExitArcs().isEmpty()) {
+                    net.getNodes().remove(endNode.getNumber());
+                    net.setNodeCount(net.getNodeCount() - 1);
+                }
+            }
+        }
     }
 
     public static void recalcPlan(Collection<Arc> values, double step) {

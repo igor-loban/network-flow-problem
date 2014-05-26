@@ -83,4 +83,12 @@ public abstract class AbstractNet {
     public double getEps() {
         return eps;
     }
+
+    public void setNodeCount(int nodeCount) {
+        this.nodeCount = nodeCount;
+    }
+
+    public void setArcCount(int arcCount) {
+        this.arcCount = arcCount;
+    }
 }
