@@ -38,24 +38,8 @@ public final class FirstPhaseNet extends AbstractNet {
         AlgoUtils.createDynamicSupport(tree, periodCount); // Построить динамич опору Qr(op)
         AlgoUtils.calcPseudoCost(tree); // Посчитать псевдо-c(ij)
         AlgoUtils.calcPotentials(tree, nodeCount, periodCount); // Посчитать потенциалы psi
-
-        //        for (Node node : nodes.values()) {
-        //            System.out.println("Period: " + node.getPeriod() + " number: " + node.getNumber() + "
-        // potential: " + node
-        //                    .getPotential());
-        //        }
-
         AlgoUtils.calcLeaps(arcs.values()); // Посчитать потенциалы ksi
         AlgoUtils.calcEstimates(arcs.values()); // Посчитать оценки delta
-
-        //        for (Arc arc : arcs.values()) {
-        //            System.out.println(
-        //                    arc.getBeginNode().getNumber() + " -> " + arc.getEndNode().getNumber() + " period: " + arc
-        //                            .getPeriod() + " number: " + arc.getNumber() + " leap: " + arc.getLeap() + "
-        // estimate: "
-        //                            + arc.getEstimate()
-        //            );
-        //        }
     }
 
     public boolean isViolated() {

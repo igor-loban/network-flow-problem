@@ -2,23 +2,11 @@ package by.bsu.fpmi.dnfp.main.util;
 
 import by.bsu.fpmi.dnfp.exception.AntitheticalConstraintsException;
 import by.bsu.fpmi.dnfp.exception.LogicalFailException;
-import by.bsu.fpmi.dnfp.main.model.Arc;
-import by.bsu.fpmi.dnfp.main.model.Node;
-import by.bsu.fpmi.dnfp.main.model.NumerableObject;
-import by.bsu.fpmi.dnfp.main.model.Support;
-import by.bsu.fpmi.dnfp.main.model.Tree;
+import by.bsu.fpmi.dnfp.main.model.*;
 import by.bsu.fpmi.dnfp.main.model.factory.NumerableObjectFactory;
 import by.bsu.fpmi.dnfp.main.net.AbstractNet;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -438,11 +426,14 @@ public final class AlgoUtils {
     private static double[] getNoSupportV(List<Arc> noSupportArcs) {
         List<Double> noSupportV = new ArrayList<>();
         for (Arc arc : noSupportArcs) {
+            double direction;
             if (ArcUtils.hasZeroEstimate(arc)) {
-                noSupportV.add(0.0);
+                direction = 0;
             } else {
-                noSupportV.add(arc.getEstimate() > 0 ? arc.getCapacity() - arc.getFlow() : -arc.getFlow());
+                direction = arc.getEstimate() > 0 ? arc.getCapacity() - arc.getFlow() : -arc.getFlow();
             }
+            noSupportV.add(direction);
+            arc.setDirection(direction);
         }
 
         double[] result = new double[noSupportV.size()];
@@ -476,8 +467,8 @@ public final class AlgoUtils {
         noSupportArcs = arcs.stream().filter((arc) -> arc.getPeriod() == period && !supportArcs.contains(arc))
                 .sorted((arc1, arc2) -> arc1.getNumber() - arc2.getNumber()).collect(Collectors.toList());
 
-        net.getNodes().values().stream().filter((node) -> node.getPeriod() == period && !nodes.contains(node))
-                .forEach(supportNodes::add);
+        net.getNodes().values().stream().filter((node) -> node.getPeriod() == period && !nodes.contains(node)
+                && !supportNodes.contains(node)).forEach(supportNodes::add);
 
         int delta = nodeCountPerPeriod - supportArcs.size() - supportNodes.size();
         for (int i = 0; i < delta; i++) {
@@ -666,6 +657,18 @@ public final class AlgoUtils {
     private static void changeTree(AbstractNet net, Arc minArc, Arc minArcAlias) {
         if (minArc.getNumber() < 0) {
             net.getArcs().remove(minArc.getNumber());
+
+            Node beginNode = minArc.getBeginNode();
+            beginNode.getExitArcs().remove(minArc);
+            if (beginNode.getIncomingArcs().isEmpty() && beginNode.getExitArcs().isEmpty()) {
+                net.getNodes().remove(beginNode.getNumber());
+            }
+
+            Node endNode = minArc.getEndNode();
+            endNode.getIncomingArcs().remove(minArc);
+            if (endNode.getIncomingArcs().isEmpty() && endNode.getExitArcs().isEmpty()) {
+                net.getNodes().remove(endNode.getNumber());
+            }
         }
         net.getTree().getArcs().remove(minArc);
         net.getTree().getArcs().add(minArcAlias);
