@@ -7,14 +7,10 @@ import java.util.Map;
  * @author Igor Loban
  */
 public final class Flow {
-    private final Map<Integer, Double> flowValues = new HashMap<>();
+    private final Map<Arc, Double> flowValues = new HashMap<>();
 
-    public void put(int arcNumber, double flowValue) {
-        flowValues.put(arcNumber, flowValue);
-    }
-
-    public double get(int arcNumber) {
-        return flowValues.get(arcNumber);
+    public void put(Arc arc, double flowValue) {
+        flowValues.put(arc, flowValue);
     }
 
     @Override

@@ -110,4 +110,9 @@ public class Arc extends NumerableObject {
     public void setCostAlias(double costAlias) {
         this.costAlias = costAlias;
     }
+
+    @Override
+    public String toString() {
+        return "(" + beginNode.getNumber() + " -> " + endNode.getNumber() + ")";
+    }
 }

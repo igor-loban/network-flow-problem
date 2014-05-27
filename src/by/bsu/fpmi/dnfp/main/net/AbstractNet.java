@@ -51,7 +51,7 @@ public abstract class AbstractNet {
     public Flow getFlow() {
         Flow flow = new Flow();
         for (Arc arc : arcs.values()) {
-            flow.put(arc.getNumber(), arc.getFlow());
+            flow.put(arc, arc.getFlow());
         }
         return flow;
     }

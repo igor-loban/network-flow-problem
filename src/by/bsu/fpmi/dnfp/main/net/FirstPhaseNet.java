@@ -37,7 +37,7 @@ public final class FirstPhaseNet extends AbstractNet {
         AlgoUtils.createInitialFlow(arcs.values()); // Построить начальный поток
         AlgoUtils.createDynamicSupport(tree, periodCount); // Построить динамич опору Qr(op)
         AlgoUtils.calcPseudoCost(tree); // Посчитать псевдо-c(ij)
-        AlgoUtils.calcPotentials(tree, nodeCount, periodCount); // Посчитать потенциалы psi
+        AlgoUtils.calcPotentials(this, nodeCount, periodCount); // Посчитать потенциалы psi
         AlgoUtils.calcLeaps(arcs.values()); // Посчитать потенциалы ksi
         AlgoUtils.calcEstimates(arcs.values()); // Посчитать оценки delta
     }
@@ -51,11 +51,18 @@ public final class FirstPhaseNet extends AbstractNet {
     }
 
     public void recalcPlan() {
+        AlgoUtils.calcLeaps(arcs.values()); // Посчитать потенциалы ksi
         AlgoUtils.calcEstimates(arcs.values()); // Посчитать оценки delta
+
+        boolean violated = isViolated();
+        System.out.println("isViolated = " + violated);
+        if (violated) {
+            return;
+        }
+
         AlgoUtils.calcDirections(this); // Посчитать направления v и l
         minArc = AlgoUtils.calcSteps(tree.getArcs()); // Посчитать шаг theta
         AlgoUtils.recalcPlan(arcs.values(), minArc.getStep()); // Пересчитать поток
-
     }
 
     public boolean isOptimized() {
@@ -69,7 +76,7 @@ public final class FirstPhaseNet extends AbstractNet {
 
     public void changeSupport() {
         AlgoUtils.changeSupport(this, minArc); // Замена опоры
-        AlgoUtils.calcPotentials(tree, nodeCount, periodCount); // Пересчет потенциалов psi
+        AlgoUtils.calcPotentials(this, nodeCount, periodCount); // Пересчет потенциалов psi
     }
 
     @Override

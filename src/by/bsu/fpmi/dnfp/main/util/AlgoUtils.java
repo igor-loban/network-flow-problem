@@ -7,7 +7,7 @@ import by.bsu.fpmi.dnfp.main.model.factory.NumerableObjectFactory;
 import by.bsu.fpmi.dnfp.main.net.AbstractNet;
 
 import java.util.*;
-import java.util.stream.Collectors;
+import java.util.function.ToIntFunction;
 
 /**
  * @author Igor Loban
@@ -78,7 +78,7 @@ public final class AlgoUtils {
      */
     public static Tree createInitialTree(Map<Integer, Node> nodes) {
         Node root = nodes.get(-1);
-        Tree tree = new Tree(root);
+        Tree tree = new Tree();
         populateTree(tree, root);
         return tree;
     }
@@ -102,7 +102,7 @@ public final class AlgoUtils {
                 Node beginNode = arc.getBeginNode();
                 Node endNode = arc.getEndNode();
                 if (isArtificial(beginNode) && isArtificial(endNode)) {
-                    arc.setFlow(arc.getCapacity()); // TODO: ???
+                    arc.setFlow(arc.getCapacity());
                 } else if (isArtificial(beginNode)) {
                     arc.setFlow(endNode.getIntensity());
                 } else if (isArtificial(endNode)) {
@@ -168,9 +168,11 @@ public final class AlgoUtils {
         Set<Arc> periodTreeArcs = ArcUtils.getArcs(tree.getArcs(), period);
         Set<Arc> periodFakeArcs = ArcUtils.getArcs(tree.getFakeArcs(), period);
         Set<Node> periodNodes = NodeUtils.getNodes(periodFakeArcs);
-        roots.addAll(periodNodes.stream()
-                .filter(node -> node.getSign() == Node.Sign.PLUS && !NodeUtils.hasArcFromSet(node, periodTreeArcs))
-                .collect(Collectors.toList()));
+        for (Node node : periodNodes) {
+            if (node.getSign() == Node.Sign.PLUS && !NodeUtils.hasArcFromSet(node, periodTreeArcs)) {
+                roots.add(node);
+            }
+        }
         return roots;
     }
 
@@ -181,7 +183,11 @@ public final class AlgoUtils {
     }
 
     private static Set<Node> getRoots(Set<Node> nodes, int period) {
-        return nodes.stream().map(node -> getRoot(node, period)).collect(Collectors.toSet());
+        Set<Node> roots = new HashSet<>();
+        for (Node node : nodes) {
+            roots.add(getRoot(node, period));
+        }
+        return roots;
     }
 
     private static Node getRoot(Node node, int period) {
@@ -224,7 +230,12 @@ public final class AlgoUtils {
                 beginNode, arcs);
     }
 
-    public static void calcPotentials(Tree tree, int nodeCount, int periodCount) {
+    public static void calcPotentials(AbstractNet net, int nodeCount, int periodCount) {
+        for (Node node : net.getNodes().values()) {
+            node.setPotential(null);
+        }
+
+        Tree tree = net.getTree();
         Set<Node> roots = tree.getRoots(periodCount - 1);
         roots.addAll(getRootByFakeArcs(tree, periodCount - 1));
         for (Node root : roots) {
@@ -234,11 +245,12 @@ public final class AlgoUtils {
     }
 
     private static void calcPotentials(Node node, Tree tree, int nodeCount) {
-        node.getChildren().stream().filter(child -> child.getPotential() == null && NodeUtils
-                .isNotMinusIntermediate(child, node, nodeCount)).forEach(child -> {
-            calcChildPotential(child, node, tree);
-            calcPotentials(child, tree, nodeCount);
-        });
+        for (Node child : node.getChildren()) {
+            if (child.getPotential() == null && NodeUtils.isNotMinusIntermediate(child, node, nodeCount)) {
+                calcChildPotential(child, node, tree);
+                calcPotentials(child, tree, nodeCount);
+            }
+        }
 
         Node parent = node.getParent();
         if (parent != null && parent.getPotential() == null && NodeUtils
@@ -250,10 +262,12 @@ public final class AlgoUtils {
         if (node.getSign() != Node.Sign.NONE) {
             if (node.getSign() == Node.Sign.PLUS) {
                 Set<Node> children = NodeUtils.getEndNodes(tree.getFakeArcs(), node);
-                children.stream().filter(child -> child.getPotential() == null).forEach(child -> {
-                    calcChildPotential(child, node, tree);
-                    calcPotentials(child, tree, nodeCount);
-                });
+                for (Node child : children) {
+                    if (child.getPotential() == null) {
+                        calcChildPotential(child, node, tree);
+                        calcPotentials(child, tree, nodeCount);
+                    }
+                }
             } else {
                 Arc fakeArc = ArcUtils.getArc(tree.getFakeArcs(), node);
                 Node fakeParent = fakeArc.getBeginNode();
@@ -297,11 +311,13 @@ public final class AlgoUtils {
     }
 
     public static void calcEstimates(Collection<Arc> arcs) {
-        arcs.stream().filter(arc -> arc.getPeriod() >= 0).forEach(arc -> {
-            Node beginNode = arc.getBeginNode();
-            Node endNode = arc.getEndNode();
-            arc.setEstimate(beginNode.getPotential() - endNode.getPotential() - arc.getCost());
-        });
+        for (Arc arc : arcs) {
+            if (arc.getPeriod() >= 0) {
+                Node beginNode = arc.getBeginNode();
+                Node endNode = arc.getEndNode();
+                arc.setEstimate(beginNode.getPotential() - endNode.getPotential() - arc.getCost());
+            }
+        }
     }
 
     public static double calcEpsU(Collection<Arc> arcs) {
@@ -338,7 +354,6 @@ public final class AlgoUtils {
 
         // For a 0 period
         Support support = getSupport(net, net.getArcs().values(), 0, nodeCountPerPeriod);
-        //TODO: сделать, чтобы при отсутсвии неопорных дуг, не пыталась составляться матрица
         double[][] A = getMatrixA(support, nodeCountPerPeriod);
         double[][] PreF = getMatrixPreF(support, nodeCountPerPeriod);
         double[] v = getNoSupportV(support.getNoSupportArcs());
@@ -444,14 +459,15 @@ public final class AlgoUtils {
         return result;
     }
 
+
+
     private static Support getSupport(AbstractNet net, Collection<Arc> arcs, int period, int nodeCountPerPeriod) {
         Tree tree = net.getTree();
         List<Arc> supportArcs = new ArrayList<>();
-        List<Arc> noSupportArcs;
         List<Arc> supportNodableArcs = new ArrayList<>();
         List<Node> supportNodes = new ArrayList<>();
         List<Node> supportArcableNodes = new ArrayList<>();
-        Set<Node> nodes = new TreeSet<>(Comparator.<Node>comparingInt(NumerableObject::getNumber));
+        Set<Node> nodes = new TreeSet<>(Comparator.comparingInt(new NumerableObjectToIntFunction()));
 
         int intermediatePeriod = -period - 1;
         for (Arc arc : tree.getArcs()) {
@@ -465,11 +481,19 @@ public final class AlgoUtils {
             }
         }
 
-        noSupportArcs = arcs.stream().filter((arc) -> arc.getPeriod() == period && !supportArcs.contains(arc))
-                .sorted((arc1, arc2) -> arc1.getNumber() - arc2.getNumber()).collect(Collectors.toList());
+        List<Arc> noSupportArcs = new ArrayList<>();
+        for (Arc arc : arcs) {
+            if (arc.getPeriod() == period && !supportArcs.contains(arc)) {
+                noSupportArcs.add(arc);
+            }
+        }
+        Collections.sort(noSupportArcs, Comparator.comparingInt(new NumerableObjectToIntFunction()));
 
-        net.getNodes().values().stream().filter((node) -> node.getPeriod() == period && !nodes.contains(node)
-                && !supportNodes.contains(node)).forEach(supportNodes::add);
+        for (Node node : net.getNodes().values()) {
+            if (node.getPeriod() == period && !nodes.contains(node) && !supportNodes.contains(node)) {
+                supportNodes.add(node);
+            }
+        }
 
         int delta = nodeCountPerPeriod - supportArcs.size() - supportNodes.size();
         for (int i = 0; i < delta; i++) {
@@ -484,10 +508,10 @@ public final class AlgoUtils {
             }
         }
 
-        supportNodes.stream().forEach((node) -> {
+        for (Node node  : supportNodes) {
             nodes.add(node);
             supportNodableArcs.add(ArcUtils.getIntermediateArc(node));
-        });
+        }
 
         Map<Integer, Integer> nodeNumbers = new HashMap<>();
         int i = 0;
@@ -526,7 +550,9 @@ public final class AlgoUtils {
     }
 
     private static void setupCostAliases(Tree tree, Arc minArc) {
-        tree.getArcs().stream().forEach((arc) -> arc.setCostAlias(0));
+        for (Arc arc : tree.getArcs()) {
+            arc.setCostAlias(0);
+        }
         minArc.setCostAlias(Math.signum(minArc.getDirection()));
     }
 
@@ -571,11 +597,12 @@ public final class AlgoUtils {
     }
 
     private static void calcPotentialAliases(Node node, Tree tree, int nodeCount) {
-        node.getChildren().stream().filter(child -> child.getPotentialAlias() == null && NodeUtils
-                .isNotMinusIntermediate(child, node, nodeCount)).forEach(child -> {
-            calcChildPotentialAlias(child, node, tree);
-            calcPotentialAliases(child, tree, nodeCount);
-        });
+        for (Node child : node.getChildren()) {
+            if (child.getPotentialAlias() == null && NodeUtils.isNotMinusIntermediate(child, node, nodeCount)) {
+                calcChildPotentialAlias(child, node, tree);
+                calcPotentialAliases(child, tree, nodeCount);
+            }
+        }
 
         Node parent = node.getParent();
         if (parent != null && parent.getPotentialAlias() == null && NodeUtils
@@ -587,10 +614,12 @@ public final class AlgoUtils {
         if (node.getSign() != Node.Sign.NONE) {
             if (node.getSign() == Node.Sign.PLUS) {
                 Set<Node> children = NodeUtils.getEndNodes(tree.getFakeArcs(), node);
-                children.stream().filter(child -> child.getPotentialAlias() == null).forEach(child -> {
-                    calcChildPotentialAlias(child, node, tree);
-                    calcPotentialAliases(child, tree, nodeCount);
-                });
+                for (Node child : children) {
+                    if (child.getPotentialAlias() == null) {
+                        calcChildPotentialAlias(child, node, tree);
+                        calcPotentialAliases(child, tree, nodeCount);
+                    }
+                }
             } else {
                 Arc fakeArc = ArcUtils.getArc(tree.getFakeArcs(), node);
                 Node fakeParent = fakeArc.getBeginNode();
@@ -656,57 +685,116 @@ public final class AlgoUtils {
     }
 
     private static void changeTree(AbstractNet net, Arc minArc, Arc minArcAlias) {
-        if (minArc.getNumber() < 0) {
-            net.getArcs().remove(minArc.getNumber());
-            net.setArcCount(net.getArcCount() - 1);
+//        if (minArc.getNumber() < 0) {
+//            net.getArcs().remove(minArc.getNumber());
+//            removeArc(net, minArc);
+//        }
 
-            Node beginNode = minArc.getBeginNode();
-            beginNode.getExitArcs().remove(minArc);
-            if (beginNode.getIncomingArcs().isEmpty() && beginNode.getExitArcs().isEmpty()) {
-                net.getNodes().remove(beginNode.getNumber());
-                net.setNodeCount(net.getNodeCount() - 1);
-            }
-
-            Node endNode = minArc.getEndNode();
-            endNode.getIncomingArcs().remove(minArc);
-            if (endNode.getIncomingArcs().isEmpty() && endNode.getExitArcs().isEmpty()) {
-                net.getNodes().remove(endNode.getNumber());
-                net.setNodeCount(net.getNodeCount() - 1);
-            }
-        }
-
-        System.out.println("Remove " + minArc.getBeginNode().getNumber() + "->" + minArc.getEndNode().getNumber());
+        System.out.println("Remove from tree " + minArc.getBeginNode().getNumber() + "->" + minArc.getEndNode().getNumber());
         net.getTree().getArcs().remove(minArc);
-        System.out.println("Add " + minArcAlias.getBeginNode().getNumber() + "->" + minArcAlias.getEndNode().getNumber());
+        System.out.println("Add to tree " + minArcAlias.getBeginNode().getNumber() + "->" + minArcAlias.getEndNode().getNumber());
         net.getTree().getArcs().add(minArcAlias);
 
-        Iterator<Arc> iterator = net.getArcs().values().iterator();
-        while (iterator.hasNext()) {
-            Arc arc = iterator.next();
-            if (arc.getNumber() < 0 && arc.getFlow() <= 0.00000001) {
-                iterator.remove();
-                net.setArcCount(net.getArcCount() - 1);
-                System.out.println("Remove " + arc.getBeginNode().getNumber() + "->" + arc.getEndNode().getNumber());
-                net.getTree().getArcs().remove(arc);
+//        Iterator<Arc> iterator = net.getArcs().values().iterator();
+//        while (iterator.hasNext()) {
+//            Arc arc = iterator.next();
+//            if (arc.getNumber() < 0 && arc.getFlow() <= 0.00000001) {
+//                iterator.remove();
+//                net.getTree().getArcs().remove(arc);
+//                removeArc(net, arc);
+//            }
+//        }
 
-                Node beginNode = arc.getBeginNode();
-                beginNode.getExitArcs().remove(arc);
-                if (beginNode.getIncomingArcs().isEmpty() && beginNode.getExitArcs().isEmpty()) {
-                    net.getNodes().remove(beginNode.getNumber());
-                    net.setNodeCount(net.getNodeCount() - 1);
+        recalcParentsAndChildren(net.getTree());
+    }
+
+    private static void recalcParentsAndChildren(Tree tree) {
+        Set<Arc> arcs = tree.getArcs();
+        Set<Node> nodes = new HashSet<>();
+        for (Arc arc : arcs) {
+            nodes.add(arc.getBeginNode());
+            nodes.add(arc.getEndNode());
+        }
+
+        while (!nodes.isEmpty()) {
+            Node root = nodes.iterator().next();
+            nodes.remove(root);
+            root.setParent(null);
+            root.getChildren().clear();
+
+            Set<Node> nextLevel = new HashSet<>();
+            nextLevel.add(root);
+            while (!nextLevel.isEmpty()) {
+                root = nextLevel.iterator().next();
+                nextLevel.remove(root);
+                root.getChildren().clear();
+
+                for (Arc arc : root.getExitArcs()) {
+                    Node endNode = arc.getEndNode();
+                    if (arcs.contains(arc) && nodes.contains(endNode)) {
+                        setupParentChildLink(root, endNode, nodes, nextLevel);
+                    }
                 }
 
-                Node endNode = arc.getEndNode();
-                endNode.getIncomingArcs().remove(arc);
-                if (endNode.getIncomingArcs().isEmpty() && endNode.getExitArcs().isEmpty()) {
-                    net.getNodes().remove(endNode.getNumber());
-                    net.setNodeCount(net.getNodeCount() - 1);
+                for (Arc arc : root.getIncomingArcs()) {
+                    Node beginNode = arc.getBeginNode();
+                    if (arcs.contains(arc) && nodes.contains(beginNode)) {
+                        setupParentChildLink(root, beginNode, nodes, nextLevel);
+                    }
                 }
             }
         }
     }
 
-    public static void recalcPlan(Collection<Arc> values, double step) {
-        values.stream().forEach((arc) -> arc.setFlow(arc.getFlow() + step * arc.getDirection()));
+    private static void setupParentChildLink(Node parent, Node child, Set<Node> source, Set<Node> target) {
+        child.setParent(parent);
+        parent.addChild(child);
+        source.remove(child);
+        target.add(child);
+    }
+
+    private static void removeArc(AbstractNet net, Arc arc) {
+        System.out.println("Remove from net " + arc.getBeginNode().getNumber() + "->" + arc.getEndNode().getNumber());
+
+        net.setArcCount(net.getArcCount() - 1);
+
+        Node beginNode = arc.getBeginNode();
+        beginNode.getExitArcs().remove(arc);
+        if (beginNode.getIncomingArcs().isEmpty() && beginNode.getExitArcs().isEmpty()) {
+            removeFromParentAndChildren(beginNode);
+            net.getNodes().remove(beginNode.getNumber());
+            net.setNodeCount(net.getNodeCount() - 1);
+        }
+
+        Node endNode = arc.getEndNode();
+        endNode.getIncomingArcs().remove(arc);
+        if (endNode.getIncomingArcs().isEmpty() && endNode.getExitArcs().isEmpty()) {
+            net.getNodes().remove(endNode.getNumber());
+            net.setNodeCount(net.getNodeCount() - 1);
+        }
+    }
+
+    private static void removeFromParentAndChildren(Node node) {
+        Node parent = node.getParent();
+        if (parent == null) {
+            for (Node child : node.getChildren()) {
+                child.setParent(null);
+            }
+        } else {
+            parent.getChildren().remove(node);
+        }
+    }
+
+    public static void recalcPlan(Collection<Arc> arcs, double step) {
+        for (Arc arc : arcs) {
+            arc.setFlow(arc.getFlow() + step * arc.getDirection());
+        }
+    }
+
+    private static class NumerableObjectToIntFunction implements ToIntFunction<NumerableObject> {
+        @Override
+        public int applyAsInt(NumerableObject object) {
+            return object.getNumber();
+        }
     }
 }

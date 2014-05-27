@@ -49,7 +49,6 @@ public final class NetworkFlowProblem {
                 net.recalcPlan();
                 System.out.println("Iteration " + iteration++ + ".");
                 System.out.println("Plan recalculated.");
-                System.out.println("isViolated = " + net.isViolated());
             }
         }
         System.out.println("Problem solved.");
