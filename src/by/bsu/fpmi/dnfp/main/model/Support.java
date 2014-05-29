@@ -4,20 +4,17 @@ import java.util.*;
 import java.util.function.ToIntFunction;
 
 public final class Support {
-    private final int period;
     private final List<Arc> supportArcs;
     private final List<Arc> noSupportArcs;
-    private final List<Arc> supportNodableArcs;
+    private final List<Arc> intermediateNoSupportArcs;
     private final List<Node> supportNodes;
+    private final Map<Node, Arc> supportNodableArcs;
     private final Map<Integer, Integer> nodeNumbers;
 
-    public Support(int period, List<Arc> supportArcs, List<Arc> noSupportArcs, List<Arc> supportNodableArcs,
-                   List<Node> supportNodes,
-                   Map<Integer, Integer> nodeNumbers) {
-        this.period = period;
-        this.nodeNumbers = nodeNumbers;
-        this.noSupportArcs = noSupportArcs;
+    public Support(List<Arc> supportArcs, List<Arc> noSupportArcs, List<Arc> intermediateNoSupportArcs,
+                   List<Node> supportNodes, Map<Node, Arc> supportNodableArcs, Map<Integer, Integer> nodeNumbers) {
         this.supportNodableArcs = supportNodableArcs;
+        this.nodeNumbers = nodeNumbers;
 
         List<Arc> tempArcs = new ArrayList<>(supportArcs);
         Comparator<NumerableObject> comparator = Comparator.comparingInt(new ToIntFunction<NumerableObject>() {
@@ -32,18 +29,18 @@ public final class Support {
         List<Node> tempNodes = new ArrayList<>(supportNodes);
         Collections.sort(tempNodes, comparator);
         this.supportNodes = Collections.unmodifiableList(tempNodes);
+
+        tempArcs = new ArrayList<>(noSupportArcs);
+        Collections.sort(tempArcs, comparator);
+        this.noSupportArcs = Collections.unmodifiableList(tempArcs);
+
+        tempArcs = new ArrayList<>(intermediateNoSupportArcs);
+        Collections.sort(tempArcs, comparator);
+        this.intermediateNoSupportArcs = Collections.unmodifiableList(tempArcs);
     }
 
     public int getIndex(Node node) {
         return nodeNumbers.get(node.getNumber());
-    }
-
-    public int getSize() {
-        return supportArcs.size() + supportNodes.size();
-    }
-
-    public int getPeriod() {
-        return period;
     }
 
     public List<Arc> getSupportArcs() {
@@ -58,7 +55,11 @@ public final class Support {
         return noSupportArcs;
     }
 
-    public List<Arc> getSupportNodableArcs() {
+    public List<Arc> getIntermediateNoSupportArcs() {
+        return intermediateNoSupportArcs;
+    }
+
+    public Map<Node, Arc> getSupportNodableArcs() {
         return supportNodableArcs;
     }
 }

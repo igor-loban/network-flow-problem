@@ -11,7 +11,7 @@ import java.util.Map;
  * @author Igor Loban
  */
 public final class FirstPhaseNet extends AbstractNet {
-    protected static final int ITERATION_LIMIT = 10;
+    protected static final int ITERATION_LIMIT = 100;
 
     private double beta;
     private Arc minArc;
