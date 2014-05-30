@@ -12,8 +12,9 @@ public final class AlgebraUtils {
         throw new AssertionError();
     }
 
-    public static double[] calcResult(double[][] A, double[] l, double[][] PreF, double[] v, double[] noSupportL) {
-        double[] rightPart = getRightPart(l, PreF, v, noSupportL);
+    public static double[] calcResult(double[][] A, double[] l, double[][] PreF, double[] v, double[] noSupportL,
+                                      double[] intensities) {
+        double[] rightPart = getRightPart(l, PreF, v, noSupportL, intensities);
         for (int i = 0; i < A.length; i++) {
             for (int j = 0; j < A[i].length; j++) {
                 System.out.print(A[i][j] + " ");
@@ -31,19 +32,21 @@ public final class AlgebraUtils {
         }
     }
 
-    private static double[] getRightPart(double[] l, double[][] PreF, double[] v, double[] noSupportL) {
+    private static double[] getRightPart(double[] l, double[][] PreF, double[] v, double[] noSupportL,
+                                         double[] intensities) {
         double[] result = new double[l.length];
         for (int i = 0; i < l.length; i++) {
-            result[i] = calcRightElement(l, PreF, v, noSupportL, i);
+            result[i] = calcRightElement(l, PreF, v, noSupportL, intensities, i);
         }
         return result;
     }
 
-    private static double calcRightElement(double[] l, double[][] PreF, double[] v, double[] noSupportL, int row) {
+    private static double calcRightElement(double[] l, double[][] PreF, double[] v, double[] noSupportL,
+                                           double[] intensities, int row) {
         double result = 0;
         for (int i = 0; i < PreF[row].length; i++) {
             result += PreF[row][i] * v[i];
         }
-        return l[row] - result - noSupportL[row];
+        return l[row] - result - noSupportL[row];// - intensities[row];
     }
 }

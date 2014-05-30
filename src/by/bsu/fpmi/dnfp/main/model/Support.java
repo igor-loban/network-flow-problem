@@ -1,7 +1,10 @@
 package by.bsu.fpmi.dnfp.main.model;
 
-import java.util.*;
-import java.util.function.ToIntFunction;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
 
 public final class Support {
     private final List<Arc> supportArcs;
@@ -17,12 +20,7 @@ public final class Support {
         this.nodeNumbers = nodeNumbers;
 
         List<Arc> tempArcs = new ArrayList<>(supportArcs);
-        Comparator<NumerableObject> comparator = Comparator.comparingInt(new ToIntFunction<NumerableObject>() {
-            @Override
-            public int applyAsInt(NumerableObject object) {
-                return object.getNumber();
-            }
-        });
+        Comparator<NumerableObject> comparator = new NumObjComparator();
         Collections.sort(tempArcs, comparator);
         this.supportArcs = Collections.unmodifiableList(tempArcs);
 

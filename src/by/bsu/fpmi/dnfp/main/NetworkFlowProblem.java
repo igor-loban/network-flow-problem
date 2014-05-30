@@ -20,9 +20,9 @@ public final class NetworkFlowProblem {
             Net net = inputData.parse();
             FirstPhaseNet firstPhaseNet = net.createFirstPhaseNet();
             doFirstPhase(firstPhaseNet);
-            if (firstPhaseNet.hasSolution()) {
-                System.out.println("Solution (flow): " + firstPhaseNet.getFlow());
-            }
+            //            if (firstPhaseNet.hasSolution()) {
+            System.out.println("Solution (flow): " + firstPhaseNet.getFlow());
+            //            }
             outputData.write(net);
         } catch (AntitheticalConstraintsException | IterationLimitException e) {
             outputData.writeError(e);
