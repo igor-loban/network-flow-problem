@@ -1,7 +1,5 @@
 package by.bsu.fpmi.dnfp.main;
 
-import by.bsu.fpmi.dnfp.exception.AntitheticalConstraintsException;
-import by.bsu.fpmi.dnfp.exception.IterationLimitException;
 import by.bsu.fpmi.dnfp.io.InputData;
 import by.bsu.fpmi.dnfp.io.OutputData;
 import by.bsu.fpmi.dnfp.main.net.AbstractNet;
@@ -16,6 +14,8 @@ public final class NetworkFlowProblem {
     }
 
     public static void solve(InputData inputData, OutputData outputData) {
+        long startTime = System.nanoTime();
+        long duration;
         try {
             Net net = inputData.parse();
             FirstPhaseNet firstPhaseNet = net.createFirstPhaseNet();
@@ -24,9 +24,13 @@ public final class NetworkFlowProblem {
             System.out.println("Solution (flow): " + firstPhaseNet.getFlow());
             //            }
             outputData.write(net);
-        } catch (AntitheticalConstraintsException | IterationLimitException e) {
+        } catch (Exception e) {
+            e.printStackTrace();
             outputData.writeError(e);
+        } finally {
+            duration = System.nanoTime() - startTime;
         }
+        System.out.println("Duration: " + (double) duration / 1000000 + " ms");
     }
 
     private static void doFirstPhase(FirstPhaseNet firstPhaseNet) {
