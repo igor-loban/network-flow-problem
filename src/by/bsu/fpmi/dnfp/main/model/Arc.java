@@ -14,6 +14,7 @@ public class Arc extends NumerableObject {
     private double leap; // ksi
     private double direction; // v or l
     private double step; // theta
+    private double stepAlias;
     private double costAlias;
 
     public Arc() {
@@ -109,6 +110,14 @@ public class Arc extends NumerableObject {
 
     public void setCostAlias(double costAlias) {
         this.costAlias = costAlias;
+    }
+
+    public double getStepAlias() {
+        return stepAlias;
+    }
+
+    public void setStepAlias(double stepAlias) {
+        this.stepAlias = stepAlias;
     }
 
     @Override

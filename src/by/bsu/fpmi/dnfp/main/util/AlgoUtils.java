@@ -16,6 +16,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -255,9 +256,9 @@ public final class AlgoUtils {
             calcPotentials(root, tree, nodeCount);
         }
 
-        for (Node node : net.getNodes().values()) {
-            System.out.println("Node " + node.getNumber() + " has potential " + node.getPotential());
-        }
+        //        for (Node node : net.getNodes().values()) {
+        //            System.out.println("Node " + node.getNumber() + " has potential " + node.getPotential());
+        //        }
     }
 
     private static void calcPotentials(Node node, Tree tree, int nodeCount) {
@@ -610,7 +611,19 @@ public final class AlgoUtils {
                 minArc = arc;
             }
         }
+        if (minArc == null) {
+            return findMinArc(arcs);
+        }
         return minArc;
+    }
+
+    private static Arc findMinArc(Set<Arc> arcs) {
+        for (Arc arc : arcs) {
+            if (arc.getNumber() < 0) {
+                return arc;
+            }
+        }
+        return arcs.iterator().next();
     }
 
     private static boolean isNewMinArc(Arc minArc, double minStep, Arc arc, double step) {
@@ -637,7 +650,92 @@ public final class AlgoUtils {
         calcPseudoCostAliases(net.getTree());
         calcPotentialAliases(net);
         Arc minArcAlias = getMinArcAlias(net.getArcs().values(), net.getTree().getArcs());
+        minArcAlias = checkMinArcAlias(net, minArc, minArcAlias);
         changeTree(net, minArc, minArcAlias);
+    }
+
+    private static Arc checkMinArcAlias(AbstractNet net, Arc minArc, Arc minArcAlias) {
+        if (minArcAlias.getNumber() >= 0) {
+            return minArcAlias;
+        }
+
+        class ArcDescriptor implements Comparable<ArcDescriptor> {
+            int number;
+            double stepAlias;
+
+            ArcDescriptor(int number, double stepAlias) {
+                this.number = number;
+                this.stepAlias = stepAlias;
+            }
+
+            @Override public int compareTo(ArcDescriptor o) {
+                double delta = stepAlias - o.stepAlias;
+                if (delta < 0) {
+                    return -1;
+                } else if (delta > 0) {
+                    return 1;
+                }
+                return 0;
+            }
+        }
+
+        Set<ArcDescriptor> arcDescriptors = new TreeSet<>();
+        for (Arc arc : net.getArcs().values()) {
+            if (arc != minArc && arc != minArcAlias && arc.getNumber() >= 0) {
+                arcDescriptors.add(new ArcDescriptor(arc.getNumber(), arc.getStepAlias()));
+            }
+        }
+
+        Set<Arc> treeArcs = new HashSet<>(net.getTree().getArcs());
+        treeArcs.remove(minArc);
+        for (ArcDescriptor arcDescriptor : arcDescriptors) {
+            Arc arc = net.getArcs().get(arcDescriptor.number);
+            treeArcs.add(arc);
+            if (isTree(treeArcs)) {
+                System.out.println("minArcAlias replaced on " + arc);
+                return arc;
+            }
+            treeArcs.remove(arc);
+        }
+
+        return minArcAlias;
+    }
+
+    private static boolean isTree(Set<Arc> treeArcs) {
+        Set<Arc> arcs = new HashSet<>(treeArcs);
+        Set<Node> markedNodes = new HashSet<>();
+        Set<Node> nodes = new HashSet<>();
+        nodes.add(treeArcs.iterator().next().getBeginNode());
+        while (!nodes.isEmpty()) {
+            Iterator<Node> iterator = nodes.iterator();
+            Node node = iterator.next();
+            iterator.remove();
+
+            for (Arc arc : node.getExitArcs()) {
+                if (arcs.contains(arc)) {
+                    arcs.remove(arc);
+                    Node node1 = arc.getEndNode();
+                    if (markedNodes.contains(node1)) {
+                        return false;
+                    }
+                    markedNodes.add(node1);
+                    nodes.add(node1);
+                }
+            }
+
+            for (Arc arc : node.getIncomingArcs()) {
+                if (arcs.contains(arc)) {
+                    arcs.remove(arc);
+                    Node node1 = arc.getBeginNode();
+                    if (markedNodes.contains(node1)) {
+                        return false;
+                    }
+                    markedNodes.add(node1);
+                    nodes.add(node1);
+                }
+            }
+        }
+        return true;
     }
 
     private static void setupCostAliases(Tree tree, Arc minArc) {
@@ -773,6 +871,8 @@ public final class AlgoUtils {
                 stepAlias = -delta / difference;
             }
 
+            arc.setStepAlias(stepAlias);
+
             if (isNewMinArcAlias(minArcAlias, minStepAlias, arc, stepAlias)) {
                 minStepAlias = stepAlias;
                 minArcAlias = arc;
@@ -801,10 +901,10 @@ public final class AlgoUtils {
     }
 
     private static void changeTree(AbstractNet net, Arc minArc, Arc minArcAlias) {
-        //        if (minArc.getNumber() < 0) {
-        //            net.getArcs().remove(minArc.getNumber());
-        //            removeArc(net, minArc);
-        //        }
+        if (minArc.getNumber() < 0) {
+            net.getArcs().remove(minArc.getNumber());
+            removeArc(net, minArc);
+        }
 
         System.out.println(
                 "Remove from tree " + minArc.getBeginNode().getNumber() + "->" + minArc.getEndNode().getNumber());
@@ -871,38 +971,37 @@ public final class AlgoUtils {
         target.add(child);
     }
 
-    //    private static void removeArc(AbstractNet net, Arc arc) {
-    //        System.out.println("Remove from net " + arc.getBeginNode().getNumber() + "->" + arc.getEndNode()
-    // .getNumber());
-    //
-    //        net.setArcCount(net.getArcCount() - 1);
-    //
-    //        Node beginNode = arc.getBeginNode();
-    //        beginNode.getExitArcs().remove(arc);
-    //        if (beginNode.getIncomingArcs().isEmpty() && beginNode.getExitArcs().isEmpty()) {
-    //            removeFromParentAndChildren(beginNode);
-    //            net.getNodes().remove(beginNode.getNumber());
-    //            net.setNodeCount(net.getNodeCount() - 1);
-    //        }
-    //
-    //        Node endNode = arc.getEndNode();
-    //        endNode.getIncomingArcs().remove(arc);
-    //        if (endNode.getIncomingArcs().isEmpty() && endNode.getExitArcs().isEmpty()) {
-    //            net.getNodes().remove(endNode.getNumber());
-    //            net.setNodeCount(net.getNodeCount() - 1);
-    //        }
-    //    }
+    private static void removeArc(AbstractNet net, Arc arc) {
+        System.out.println("Remove from net " + arc.getBeginNode().getNumber() + "->" + arc.getEndNode().getNumber());
 
-    //    private static void removeFromParentAndChildren(Node node) {
-    //        Node parent = node.getParent();
-    //        if (parent == null) {
-    //            for (Node child : node.getChildren()) {
-    //                child.setParent(null);
-    //            }
-    //        } else {
-    //            parent.getChildren().remove(node);
-    //        }
-    //    }
+        net.setArcCount(net.getArcCount() - 1);
+
+        Node beginNode = arc.getBeginNode();
+        beginNode.getExitArcs().remove(arc);
+        if (beginNode.getIncomingArcs().isEmpty() && beginNode.getExitArcs().isEmpty()) {
+            removeFromParentAndChildren(beginNode);
+            net.getNodes().remove(beginNode.getNumber());
+            net.setNodeCount(net.getNodeCount() - 1);
+        }
+
+        Node endNode = arc.getEndNode();
+        endNode.getIncomingArcs().remove(arc);
+        if (endNode.getIncomingArcs().isEmpty() && endNode.getExitArcs().isEmpty()) {
+            net.getNodes().remove(endNode.getNumber());
+            net.setNodeCount(net.getNodeCount() - 1);
+        }
+    }
+
+    private static void removeFromParentAndChildren(Node node) {
+        Node parent = node.getParent();
+        if (parent == null) {
+            for (Node child : node.getChildren()) {
+                child.setParent(null);
+            }
+        } else {
+            parent.getChildren().remove(node);
+        }
+    }
 
     public static void recalcPlan(Collection<Arc> arcs, double step) {
         for (Arc arc : arcs) {

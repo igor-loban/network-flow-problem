@@ -20,9 +20,7 @@ public final class NetworkFlowProblem {
             Net net = inputData.parse();
             FirstPhaseNet firstPhaseNet = net.createFirstPhaseNet();
             doFirstPhase(firstPhaseNet);
-            //            if (firstPhaseNet.hasSolution()) {
             System.out.println("Solution (flow): " + firstPhaseNet.getFlow());
-            //            }
             outputData.write(net);
         } catch (Exception e) {
             e.printStackTrace();
