@@ -438,18 +438,18 @@ public final class AlgoUtils {
             l[support.getIndex(node)] = result[index];
             Arc arc = supportNodableArcs.get(node);
             if (arc != null) {
-                arc.setDirection(result[index]);
+                arc.setDirection(result[index] - arc.getFlow());  //изменено
             }
         }
 
         List<Arc> supportArcs = support.getSupportArcs();
         for (int i = 0; i < supportArcs.size(); i++, index++) {
-            supportArcs.get(i).setDirection(result[index]);
+            supportArcs.get(i).setDirection(result[index] - supportArcs.get(i).getFlow()); //изменено
         }
 
         for (Arc arc : support.getIntermediateNoSupportArcs()) {
             Node node = arc.getBeginNode();
-            arc.setDirection(noSupportL[support.getIndex(node)]);
+            arc.setDirection(noSupportL[support.getIndex(node)] - arc.getFlow()); // изменено
         }
     }
 
@@ -505,10 +505,12 @@ public final class AlgoUtils {
             if (ArcUtils.hasZeroEstimate(arc)) {
                 direction = 0;
             } else {
-                direction = arc.getEstimate() > 0 ? arc.getCapacity() - arc.getFlow() : -arc.getFlow();
+                //                direction = arc.getEstimate() > 0 ? arc.getCapacity() - arc.getFlow() : -arc
+                // .getFlow();
+                direction = arc.getEstimate() > 0 ? arc.getCapacity() : 0;  // изменено
             }
             noSupportV.add(direction);
-            arc.setDirection(direction);
+            arc.setDirection(direction - arc.getFlow());
         }
 
         double[] result = new double[noSupportV.size()];
@@ -523,9 +525,10 @@ public final class AlgoUtils {
         for (Arc arc : support.getIntermediateNoSupportArcs()) {
             int index = support.getIndex(arc.getBeginNode());
             if (arc.getLeap() > 0) {
-                result[index] = arc.getCapacity() - arc.getFlow();
+                //               result[index] = arc.getCapacity() - arc.getFlow();
+                result[index] = arc.getCapacity();
             } else if (arc.getLeap() < 0) {
-                result[index] = -arc.getFlow();
+                result[index] = 0;
             }
         }
         return result;
@@ -565,7 +568,7 @@ public final class AlgoUtils {
             supportNodes.remove(node);
             Arc arc = ArcUtils.getIntermediateArc(node);
             if (arc != null) {
-                arc.setDirection(0);
+                arc.setDirection(-arc.getFlow());
             }
         }
 

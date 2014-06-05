@@ -21,7 +21,7 @@ public final class NetworkFlowProblem {
             FirstPhaseNet firstPhaseNet = net.createFirstPhaseNet();
             doFirstPhase(firstPhaseNet);
             System.out.println("Solution (flow): " + firstPhaseNet.getFlow());
-            outputData.write(net);
+            outputData.write(firstPhaseNet);
         } catch (Exception e) {
             e.printStackTrace();
             outputData.writeError(e);

@@ -1,12 +1,14 @@
 package by.bsu.fpmi.dnfp.io;
 
-import by.bsu.fpmi.dnfp.main.net.Net;
+import by.bsu.fpmi.dnfp.main.model.Arc;
+import by.bsu.fpmi.dnfp.main.net.AbstractNet;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
+import java.util.Map;
 
 /**
  * @author Igor Loban
@@ -27,16 +29,17 @@ public class PlainTextOutputData implements OutputData {
     }
 
     @Override
-    public void write(Net net) {
+    public void write(AbstractNet net) {
         PrintWriter writer = new PrintWriter(outputStream);
 
-        if (net.hasSolution()) {
-            // TODO: print the solution
-            writer.println("Solution: ...");
-        } else {
-            writer.println("Problem has no solution.");
-            writer.println("Reason: constraints maybe are antithetical.");
+        //        if (net.hasSolution()) {
+        for (Map.Entry<Arc, Double> entry : net.getFlow().asMap().entrySet()) {
+            writer.println(entry.getKey() + ": " + entry.getValue());
         }
+        //        } else {
+        //            writer.println("Problem has no solution.");
+        //            writer.println("Reason: constraints maybe are antithetical.");
+        //        }
 
         writer.close();
     }

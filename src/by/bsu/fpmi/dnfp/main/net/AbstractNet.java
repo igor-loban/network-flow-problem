@@ -51,7 +51,9 @@ public abstract class AbstractNet {
     public Flow getFlow() {
         Flow flow = new Flow();
         for (Arc arc : arcs.values()) {
-            flow.put(arc, arc.getFlow());
+            if (arc.getNumber() >= 0) {
+                flow.put(arc, arc.getFlow());
+            }
         }
         return flow;
     }
@@ -72,8 +74,16 @@ public abstract class AbstractNet {
         return nodeCount;
     }
 
+    public void setNodeCount(int nodeCount) {
+        this.nodeCount = nodeCount;
+    }
+
     public int getArcCount() {
         return arcCount;
+    }
+
+    public void setArcCount(int arcCount) {
+        this.arcCount = arcCount;
     }
 
     public int getPeriodCount() {
@@ -82,13 +92,5 @@ public abstract class AbstractNet {
 
     public double getEps() {
         return eps;
-    }
-
-    public void setNodeCount(int nodeCount) {
-        this.nodeCount = nodeCount;
-    }
-
-    public void setArcCount(int arcCount) {
-        this.arcCount = arcCount;
     }
 }

@@ -47,6 +47,6 @@ public final class AlgebraUtils {
         for (int i = 0; i < PreF[row].length; i++) {
             result += PreF[row][i] * v[i];
         }
-        return l[row] - result - noSupportL[row];// - intensities[row];
+        return l[row] - result - noSupportL[row] + intensities[row];
     }
 }
