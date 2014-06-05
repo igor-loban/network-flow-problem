@@ -1,6 +1,7 @@
 package by.bsu.fpmi.dnfp.io;
 
 import by.bsu.fpmi.dnfp.main.model.Arc;
+import by.bsu.fpmi.dnfp.main.model.Node;
 import by.bsu.fpmi.dnfp.main.net.AbstractNet;
 
 import java.io.File;
@@ -33,8 +34,12 @@ public class PlainTextOutputData implements OutputData {
         PrintWriter writer = new PrintWriter(outputStream);
 
         //        if (net.hasSolution()) {
+        int nodeCountPerPeriod = net.getNodeCount() / (net.getPeriodCount() + 1);
         for (Map.Entry<Arc, Double> entry : net.getFlow().asMap().entrySet()) {
-            writer.println(entry.getKey() + ": " + entry.getValue());
+            Arc arc = entry.getKey();
+            writer.println(
+                    "(" + getNumber(arc.getBeginNode(), nodeCountPerPeriod) + " -> " + getNumber(arc.getEndNode(),
+                            nodeCountPerPeriod) + "): " + entry.getValue());
         }
         //        } else {
         //            writer.println("Problem has no solution.");
@@ -42,6 +47,10 @@ public class PlainTextOutputData implements OutputData {
         //        }
 
         writer.close();
+    }
+
+    private String getNumber(Node node, int nodeCountPerPeriod) {
+        return (node.getNumber() - nodeCountPerPeriod * node.getPeriod()) + "[" + node.getPeriod() + "]";
     }
 
     @Override
