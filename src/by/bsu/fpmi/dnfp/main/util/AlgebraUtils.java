@@ -22,13 +22,33 @@ public final class AlgebraUtils {
             System.out.println(rightPart[i]);
         }
 
+        return solveSystem(A, rightPart);
+
+    }
+
+    private static double[] solveSystem(double[][] A, double[] rightPart) {
         try {
             DecompositionSolver solver = new LUDecomposition(MatrixUtils.createRealMatrix(A)).getSolver();
             RealVector vector = solver.solve(new ArrayRealVector(rightPart));
             return vector.toArray();
         } catch (SingularMatrixException e) {
-            System.out.println("SingularMatrixException happen - result is zero vector.");
-            return new double[A.length];
+            double result[] = new double[A.length];
+            double[][] newA = new double[A.length - 1][];
+            double[] newRightPart = new double[A.length - 1];
+            for (int i = 0; i < A.length - 1; i++) {
+                newA[i] = new double[A.length - 1];
+                for (int j = 0; j < A.length - 1; j++) {
+                    newA[i][j] = A[i + 1][j + 1];
+                }
+                newRightPart[i] = rightPart[i + 1];
+            }
+            double[] partialResult = solveSystem(newA, newRightPart);
+            for (int i = 1; i < A.length; i++) {
+                result[i] = partialResult[i - 1];
+            }
+            // System.out.println("SingularMatrixException happen - result is zero vector.");
+            return result;
+            // return new double[A.length];
         }
     }
 

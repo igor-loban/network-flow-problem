@@ -14,6 +14,7 @@ import by.bsu.fpmi.dnfp.main.net.AbstractNet;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -381,7 +382,7 @@ public final class AlgoUtils {
         System.out.println("Result: " + Arrays.toString(result));
         fillDirections(support, l, noSupportL, result);
 
-        for (int period = 1; period < periodCount; period++) {
+        for (int period = 1; period < periodCount - 1; period++) {
             nodeCountPerPeriod = getNodeCountPerPeriod(net, period);
             support = getSupport(net, period, nodeCountPerPeriod);
             A = getMatrixA(support, nodeCountPerPeriod);
@@ -394,16 +395,54 @@ public final class AlgoUtils {
             System.out.println("Result: " + Arrays.toString(result));
             fillDirections(support, l, noSupportL, result);
         }
+
+        int period = periodCount - 1;
+        nodeCountPerPeriod = getNodeCountPerPeriod(net, period);
+        support = getSupport2(net, period, nodeCountPerPeriod);
+        A = getMatrixA(support, nodeCountPerPeriod);
+        PreF = getMatrixPreF(support, nodeCountPerPeriod);
+        v = getNoSupportV(support.getNoSupportArcs());
+        noSupportL = new double[nodeCountPerPeriod];
+        l = getNewL(l, nodeCountPerPeriod); // ???
+        intensities = getIntensities(net, support, nodeCountPerPeriod, period); // ???
+        result = AlgebraUtils.calcResult(A, l, PreF, v, noSupportL, intensities);
+        System.out.println("Result: " + Arrays.toString(result));
+        fillDirections(support, l, noSupportL, result);
     }
 
-    private static double[] getIntensities(AbstractNet net, Support support, int nodeCountPerPeriod, int period) {
-        double[] intensities = new double[nodeCountPerPeriod];
-        for (Node node : net.getNodes().values()) {
-            if (node.getPeriod() == period) {
-                intensities[support.getIndex(node)] = node.getIntensity();
+    private static Support getSupport2(AbstractNet net, int period, int nodeCountPerPeriod) {
+        List<Arc> supportArcs = new ArrayList<>();
+        List<Arc> noSupportArcs = new ArrayList<>();
+        Set<Node> nodes = new TreeSet<>(new NumObjComparator());
+
+        Tree tree = net.getTree();
+        Set<Arc> treeArcs = tree.getArcs();
+        for (Arc arc : net.getArcs().values()) {
+            if (arc.getPeriod() == period) {
+                nodes.add(arc.getBeginNode());
+                nodes.add(arc.getEndNode());
+                if (treeArcs.contains(arc)) {
+                    supportArcs.add(arc);
+                } else {
+                    noSupportArcs.add(arc);
+                }
             }
         }
-        return intensities;
+
+        int delta = nodeCountPerPeriod - supportArcs.size();
+        for (int i = 0; i < delta; i++) {
+            Arc arc = noSupportArcs.remove(0);
+            supportArcs.add(arc);
+        }
+
+        Map<Integer, Integer> nodeNumbers = new HashMap<>();
+        int i = 0;
+        for (Node node : nodes) {
+            nodeNumbers.put(node.getNumber(), i++);
+        }
+
+        return new Support(supportArcs, noSupportArcs, Collections.<Arc>emptyList(), Collections.<Node>emptyList(),
+                Collections.<Node, Arc>emptyMap(), nodeNumbers);
     }
 
     private static double[] getNewL(double[] l, int nodeCountPerPeriod) {
@@ -415,14 +454,14 @@ public final class AlgoUtils {
         return newL;
     }
 
-    private static int getNodeCountPerPeriod(AbstractNet net, int period) {
-        int count = 0;
+    private static double[] getIntensities(AbstractNet net, Support support, int nodeCountPerPeriod, int period) {
+        double[] intensities = new double[nodeCountPerPeriod];
         for (Node node : net.getNodes().values()) {
             if (node.getPeriod() == period) {
-                count++;
+                intensities[support.getIndex(node)] = node.getIntensity();
             }
         }
-        return count;
+        return intensities;
     }
 
     private static void fillDirections(Support support, double[] l, double[] noSupportL, double[] result) {
@@ -451,6 +490,16 @@ public final class AlgoUtils {
             Node node = arc.getBeginNode();
             arc.setDirection(noSupportL[support.getIndex(node)] - arc.getFlow()); // изменено
         }
+    }
+
+    private static int getNodeCountPerPeriod(AbstractNet net, int period) {
+        int count = 0;
+        for (Node node : net.getNodes().values()) {
+            if (node.getPeriod() == period) {
+                count++;
+            }
+        }
+        return count;
     }
 
     private static double[][] getMatrixA(Support support, int nodeCountPerPeriod) {
@@ -577,6 +626,8 @@ public final class AlgoUtils {
         for (Arc arc : net.getArcs().values()) {
             if (arc.getPeriod() == period && !supportArcs.contains(arc)) {
                 noSupportArcs.add(arc);
+                nodes.add(arc.getBeginNode());
+                nodes.add(arc.getEndNode());
             } else if (arc.getPeriod() == intermediatePeriod && !tree.getArcs().contains(arc)) {
                 artificialNoSupportArcs.add(arc);
             }
@@ -904,10 +955,10 @@ public final class AlgoUtils {
     }
 
     private static void changeTree(AbstractNet net, Arc minArc, Arc minArcAlias) {
-        if (minArc.getNumber() < 0) {
-            net.getArcs().remove(minArc.getNumber());
-            removeArc(net, minArc);
-        }
+        //        if (minArc.getNumber() < 0) {
+        //            net.getArcs().remove(minArc.getNumber());
+        //            removeArc(net, minArc);
+        //        }
 
         System.out.println(
                 "Remove from tree " + minArc.getBeginNode().getNumber() + "->" + minArc.getEndNode().getNumber());
